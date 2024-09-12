@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import gspread
@@ -5,21 +6,26 @@ import gspread
 from database.db_connect import GoogleSheetsConnection
 from models.models import User, Service, Payment, VPNKey, Subscription, Log, Transaction
 
+logger = logging.getLogger(__name__)
+
 
 def create_sheet_if_not_exists(spreadsheet, sheet_name: str, columns: List[str]):
     """Создать новый лист, если он не существует."""
     try:
         spreadsheet.worksheet(sheet_name)
+        logger.info(f"Лист уже существует: {sheet_name}")
     except gspread.exceptions.WorksheetNotFound:
         worksheet = spreadsheet.add_worksheet(title=sheet_name, rows=100, cols=len(columns))
         worksheet.insert_row(columns, 1)
-        print(f"Created sheet: {sheet_name} with columns: {columns}")
+        logger.info(f"Создан лист: {sheet_name} с колонками: {columns}")
 
 
 def update_sheet_if_necessary(worksheet, expected_columns: List[str]):
     """Обновить таблицу, если колонки изменились."""
     current_columns = worksheet.row_values(1)
     if set(current_columns) != set(expected_columns):
+        logger.info(f"Обновление листа: {worksheet.title} для соответствия колонкам: {expected_columns}")
+
         # Удаляем старые столбцы, добавляем новые
         for col in current_columns:
             if col not in expected_columns:
@@ -29,12 +35,18 @@ def update_sheet_if_necessary(worksheet, expected_columns: List[str]):
         for col in expected_columns:
             if col not in current_columns:
                 worksheet.append_row([col], value_input_option='RAW')
-        print(f"Updated sheet: {worksheet.title} to match columns: {expected_columns}")
+
+        logger.info(f"Обновлен лист: {worksheet.title} для соответствия колонкам: {expected_columns}")
 
 
 def initialize_sheets(config):
-    connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
-    spreadsheet = connection.client.open_by_key(config.google_sheets.spreadsheet_id)
+    """Инициализировать листы в Google Sheets."""
+    try:
+        connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
+        spreadsheet = connection.client.open_by_key(config.google_sheets.spreadsheet_id)
+    except Exception as e:
+        logger.error("Ошибка при установлении соединения с Google Sheets", exc_info=True)
+        raise
 
     # Определяем модели для каждой таблицы
     sheets = {
@@ -55,14 +67,18 @@ def initialize_sheets(config):
             update_sheet_if_necessary(worksheet, expected_columns)
         except gspread.exceptions.WorksheetNotFound:
             create_sheet_if_not_exists(spreadsheet, sheet_name, expected_columns)
+        except Exception as e:
+            logger.error(f"Ошибка при работе с листом: {sheet_name}", exc_info=True)
 
 
 def InitDB(config):
-    # Инициализируем БД, создаем все таблицы если их нет, обновляем их при необходимости
-    initialize_sheets(config)
-
-    # Здесь можно вернуть необходимые методы, если нужно
-    from database.methods import GoogleSheetsMethods
-    connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
-    methods = GoogleSheetsMethods(connection, config.google_sheets.spreadsheet_id)
-    return methods
+    """Инициализировать БД, создать все таблицы если их нет, обновить их при необходимости."""
+    try:
+        initialize_sheets(config)
+        from database.methods import GoogleSheetsMethods
+        connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
+        methods = GoogleSheetsMethods(connection, config.google_sheets.spreadsheet_id)
+        return methods
+    except Exception as e:
+        logger.error("Ошибка при инициализации базы данных", exc_info=True)
+        raise
