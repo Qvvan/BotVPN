@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from environs import Env
 
 
@@ -8,8 +9,15 @@ class TgBot:
 
 
 @dataclass
+class GoogleSheetsConfig:
+    credentials_file: str
+    spreadsheet_id: str
+
+
+@dataclass
 class Config:
     tg_bot: TgBot
+    google_sheets: GoogleSheetsConfig
 
 
 def load_config(path: str | None = None) -> Config:
@@ -17,4 +25,8 @@ def load_config(path: str | None = None) -> Config:
     env.read_env(path)
     return Config(
         tg_bot=TgBot(token=env('BOT_TOKEN')),
+        google_sheets=GoogleSheetsConfig(
+            credentials_file=env('GOOGLE_SHEETS_CREDENTIALS_FILE'),
+            spreadsheet_id=env('SPREADSHEET_ID')  # Загружаем конфигурацию для Google Sheets
+        )
     )
