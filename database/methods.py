@@ -1,23 +1,33 @@
-from database.db_connect import GoogleSheetsConnection
+from pydantic import BaseModel
+
 
 class GoogleSheetsMethods:
-    def __init__(self, connection: GoogleSheetsConnection, spreadsheet_id: str):
-        self.connection = connection
-        self.spreadsheet_id = spreadsheet_id
-        self.sheet = self._get_spreadsheet()
+    def __init__(self, connection, spreadsheet_id: str):
+        self.client = connection.client
+        self.spreadsheet = self.client.open_by_key(spreadsheet_id)
 
-    def _get_spreadsheet(self):
-        return self.connection.client.open_by_key(self.spreadsheet_id)
+    def user_exists(self, username: str) -> bool:
+        """Проверить, существует ли пользователь с таким именем."""
+        worksheet = self.spreadsheet.worksheet('Users')
+        cell = worksheet.find(username)  # Ищем пользователя по имени
+        return cell is not None
 
-    def create_sheet(self, title: str):
-        # Создание нового листа
-        spreadsheet = self.sheet
-        spreadsheet.add_worksheet(title=title, rows="100", cols="20")
-        return f"Sheet '{title}' created successfully."
+    def add_user(self, user: BaseModel):
+        """Добавить нового пользователя в таблицу Users, если его нет в базе."""
+        if self.user_exists(user.username):
+            print(f"User {user.username} already exists.")
+            return
 
-    def add_column(self, sheet_name: str, column_name: str):
-        # Добавление нового столбца
-        worksheet = self.sheet.worksheet(sheet_name)
-        col_num = len(worksheet.row_values(1)) + 1
-        worksheet.update_cell(1, col_num, column_name)
-        return f"Column '{column_name}' added to sheet '{sheet_name}'."
+        worksheet = self.spreadsheet.worksheet('Users')
+
+        # Преобразуем данные модели пользователя в список значений
+        user_data = [
+            str(user.id),
+            user.username,
+            user.created_at.isoformat(),
+            user.updated_at.isoformat()
+        ]
+
+        # Добавляем новую строку с данными пользователя
+        worksheet.append_row(user_data, value_input_option='RAW')
+        print(f"User {user.username} added successfully.")
