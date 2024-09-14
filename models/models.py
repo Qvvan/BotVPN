@@ -9,28 +9,27 @@ class Users(BaseModel):
     tg_id: int
     username: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Service(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: int
     name: str
     duration_days: int
     price: int
 
 
 class VPNKey(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-    key: str
-    issued_at: Optional[datetime] = None
-    is_active: bool = False
-    is_blocked: bool = False
+    id: int
+    key: str = ''
+    issued_at: datetime = Field(default_factory=datetime.utcnow)
+    is_active: int
+    is_blocked: int
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Subscription(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: int
     tg_id: int
     service_id: UUID
     vpn_key_id: UUID
@@ -40,7 +39,7 @@ class Subscription(BaseModel):
 
 
 class Log(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: int
     tg_id: int
     action: str
     details: dict[str, Any]
@@ -48,7 +47,7 @@ class Log(BaseModel):
 
 
 class Transaction(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: int
     transaction_id: str
     service_id: str
     tg_id: int

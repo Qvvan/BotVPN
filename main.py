@@ -6,8 +6,10 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from config_data.config import load_config, Config
+from database.db import DB
 from database.init_db.init_db import InitDB
 from handlers import user_handlers, kb_handlers, invoice_handlers
+from models.models import VPNKey
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
+
 
 
 if __name__ == "__main__":

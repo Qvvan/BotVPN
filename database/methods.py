@@ -15,7 +15,6 @@ class GoogleSheetsMethods:
     def add_user(self, user: Users):
         """Добавить нового пользователя в таблицу Users, если его нет в базе."""
         if self.user_exists(str(user.tg_id)):
-
             return
 
         worksheet = self.spreadsheet.worksheet('Users')
@@ -52,8 +51,30 @@ class GoogleSheetsMethods:
         worksheet.append_row(transaction_data, value_input_option='USER_ENTERED')
         return True
 
-    @staticmethod
-    def get_vpn_key(self, vpn: VPNKey):
+    def update_vpn_key(self, vpnkey: VPNKey):
         worksheet = self.spreadsheet.worksheet('VPNKeys')
-        services = worksheet.get_all_records()
-        return services
+
+        # Получаем все записи и находим индекс строки для обновления
+        records = worksheet.get_all_records()
+        for idx, record in enumerate(records):
+            if record['id'] == vpnkey.id:  # Убедитесь, что ID сравнивается как строка
+                # Индекс строки в таблице (нужно добавить 2, так как get_all_records() пропускает строку заголовков)
+                row_index = idx + 2
+
+                update_data = [
+                    vpnkey.issued_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    vpnkey.is_active,
+                    vpnkey.is_blocked,
+                    vpnkey.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                ]
+
+                # Обновляем указанные поля
+                worksheet.update(f'C{row_index}', [[update_data[0]]])
+                worksheet.update(f'D{row_index}', [[update_data[1]]])
+                worksheet.update(f'E{row_index}', [[update_data[2]]])
+                worksheet.update(f'G{row_index}', [[update_data[3]]])
+
+                return 'successful'
+
+        return 'record not found'
+
