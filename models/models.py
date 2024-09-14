@@ -18,7 +18,7 @@ class Service(BaseModel):
 
 
 class VPNKey(BaseModel):
-    id: int
+    id: int = Field(default_factory=int)
     key: str = ''
     issued_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: int
@@ -28,10 +28,9 @@ class VPNKey(BaseModel):
 
 
 class Subscription(BaseModel):
-    id: int
     tg_id: int
     service_id: int
-    vpn_key_id: int
+    vpn_key_id: str
     start_date: datetime
     end_date: datetime
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -47,9 +46,8 @@ class Log(BaseModel):
 
 
 class Transaction(BaseModel):
-    id: int
     transaction_id: str
-    service_id: str
+    service_id: int
     tg_id: int
     status: str
     created_at: datetime = Field(default_factory=datetime.utcnow)

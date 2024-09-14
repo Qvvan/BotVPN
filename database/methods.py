@@ -41,7 +41,6 @@ class GoogleSheetsMethods:
         worksheet = self.spreadsheet.worksheet('Transactions')
 
         transaction_data = [
-            str(transaction.id),
             str(transaction.transaction_id),
             str(transaction.service_id),
             str(transaction.tg_id),
@@ -65,6 +64,7 @@ class GoogleSheetsMethods:
                     vpnkey.issued_at.strftime('%Y-%m-%d %H:%M:%S'),
                     vpnkey.is_active,
                     vpnkey.is_blocked,
+                    vpnkey.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                     vpnkey.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ]
 
@@ -76,6 +76,19 @@ class GoogleSheetsMethods:
                 return True
 
         return False
+
+    def get_vpn_key(self):
+        worksheet = self.spreadsheet.worksheet('VPNKeys')
+        records = worksheet.get_all_records()
+
+        # Найти первый VPN-ключ, который соответствует условиям
+        for record in records:
+            if record.get('is_active') == 0 and record.get('is_blocked') == 0:
+                return record  # Возвращаем запись ключа
+
+        # Если нет подходящего ключа, возвращаем None или другое значение
+        return None
+
 
     def get_subscription(self, tg_id):
         """Проверить наличие подписки по tg_id в таблице Subscriptions."""
@@ -92,7 +105,6 @@ class GoogleSheetsMethods:
         worksheet = self.spreadsheet.worksheet('Subscriptions')
 
         subscription = [
-            str(sub.id),
             str(sub.tg_id),
             str(sub.service_id),
             str(sub.vpn_key_id),
@@ -103,8 +115,6 @@ class GoogleSheetsMethods:
         ]
         worksheet.append_row(subscription, value_input_option='RAW')
         return True
-
-    from datetime import datetime
 
     def update_sub(self, sub: Subscription):
         worksheet = self.spreadsheet.worksheet('Subscriptions')
@@ -129,10 +139,10 @@ class GoogleSheetsMethods:
                     ]
 
                     # Обновляем основные данные в строке
-                    worksheet.update(f'B{row_index}:F{row_index}', [update_data])
+                    worksheet.update(f'A{row_index}:E{row_index}', [update_data])
 
                     # Отдельно обновляем поле updated_at
                     updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    worksheet.update(f'H{row_index}', updated_at)
+                    worksheet.update(f'G{row_index}', updated_at)
 
         return True

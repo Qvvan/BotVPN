@@ -12,9 +12,11 @@ async def handle_service_callback(callback_query: CallbackQuery):
     service_id = data[1]
     service_name = data[3]
     price_service = int(float(1))
+    duration_days = data[4]
 
     await send_invoice_handler(message=callback_query.message,
                                price_service=price_service,
                                service_name=service_name,
                                service_id=service_id,
+                               duration_days=duration_days,
                                )

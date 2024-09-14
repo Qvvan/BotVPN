@@ -7,8 +7,9 @@ from database.db import DB
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: int
-    service_price: float
+    service_price: int
     service_name: str
+    duration_days: str
 
 
 class InlineKeyboards:
@@ -24,11 +25,13 @@ class InlineKeyboards:
             service_id = service['id']
             service_name = service['name']
             service_price = service['price']
+            duration_days = str(service['duration_days'])
 
             callback_data = ServiceCallbackFactory(
                 service_id=service_id,
                 service_price=service_price,
                 service_name=service_name,
+                duration_days=duration_days,
             ).pack()
 
             buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
