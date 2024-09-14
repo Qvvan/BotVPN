@@ -1,34 +1,20 @@
-from aiogram import Router, F
-from aiogram.filters.callback_data import CallbackData
+from aiogram import Router
 from aiogram.types import CallbackQuery
 
-router = Router()  # Создаем маршрутизатор
-# # Коллбэк для услуг
-# service_callback = CallbackData("service", "days")
+from handlers.invoice_handlers import send_invoice_handler
 
-@router.callback_query(F.data == 'big_button_1_pressed')
-async def process_button_1_press(callback: CallbackQuery):
-    await callback.message.edit_text(
-        text='Была нажата БОЛЬШАЯ КНОПКА 1',
-        reply_markup=callback.message.reply_markup
-    )
-
-@router.callback_query(F.data == 'big_button_2_pressed')
-async def process_button_2_press(callback: CallbackQuery):
-    await callback.message.edit_text(
-        text='Была нажата БОЛЬШАЯ КНОПКА 2',
-        reply_markup=callback.message.reply_markup
-    )
+router = Router()
 
 
-# # Хэндлер для обработки нажатий на кнопки с выбором услуг
-# @router.callback_query(service_callback.filter())
-# async def process_service_choice(callback: CallbackQuery, callback_data: dict):
-#     # Извлекаем количество дней из коллбэка
-#     days = callback_data['days']
-#
-#     # Ответ пользователю
-#     await callback.message.answer(f"Вы выбрали услугу на {days} дней.")
-#
-#     # Дополнительно: можно отредактировать сообщение, убрать клавиатуру и т.д.
-#     await callback.answer()  # Чтобы закрыть окно с загрузкой (loading)
+@router.callback_query()
+async def handle_service_callback(callback_query: CallbackQuery):
+    data = callback_query.data.split(':')
+    service_id = data[1]
+    service_name = data[3]
+    price_service = int(float(1))
+
+    await send_invoice_handler(message=callback_query.message,
+                               price_service=price_service,
+                               service_name=service_name,
+                               service_id=service_id,
+                               )

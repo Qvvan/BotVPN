@@ -5,7 +5,7 @@ class ReplyKeyboards:
     @staticmethod
     def start_keyboard() -> ReplyKeyboardMarkup:
         """Клавиатура для кнопки 'Оформляем!'"""
-        start_button = KeyboardButton("Оформляем!")
+        start_button = KeyboardButton(text="Оформляем!")
         return ReplyKeyboardMarkup(
             keyboard=[[start_button]],
             resize_keyboard=True,
@@ -15,7 +15,7 @@ class ReplyKeyboards:
     @staticmethod
     def pay_keyboard() -> ReplyKeyboardMarkup:
         """Клавиатура для кнопки 'Оплатить'"""
-        pay_button = KeyboardButton("Оплатить")
+        pay_button = KeyboardButton(text="Оплатить")
         return ReplyKeyboardMarkup(
             keyboard=[[pay_button]],
             resize_keyboard=True,
