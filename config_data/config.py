@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TgBot:
-    token: str  # Токен для доступа к телеграм-боту
+    token: str
+    admin_ids: list[int]
 
 
 @dataclass
@@ -28,7 +29,10 @@ def load_config(path: str | None = None) -> Config:
     try:
         env.read_env(path)
         config = Config(
-            tg_bot=TgBot(token=env('BOT_TOKEN')),
+            tg_bot=TgBot(
+                token=env('BOT_TOKEN'),
+                admin_ids=list(map(int, env.list('ADMIN_IDS')))
+            ),
             google_sheets=GoogleSheetsConfig(
                 credentials_file=env('GOOGLE_SHEETS_CREDENTIALS_FILE'),
                 spreadsheet_id=env('SPREADSHEET_ID')  # Загружаем конфигурацию для Google Sheets
