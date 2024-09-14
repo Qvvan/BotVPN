@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
-from uuid import UUID, uuid4
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -31,9 +30,10 @@ class VPNKey(BaseModel):
 class Subscription(BaseModel):
     id: int
     tg_id: int
-    service_id: UUID
-    vpn_key_id: UUID
+    service_id: int
+    vpn_key_id: int
     start_date: datetime
+    end_date: datetime
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

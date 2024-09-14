@@ -1,4 +1,6 @@
-from models.models import Transaction, VPNKey, Users
+from datetime import datetime
+
+from models.models import Transaction, VPNKey, Users, Subscription
 
 
 class GoogleSheetsMethods:
@@ -54,11 +56,9 @@ class GoogleSheetsMethods:
     def update_vpn_key(self, vpnkey: VPNKey):
         worksheet = self.spreadsheet.worksheet('VPNKeys')
 
-        # Получаем все записи и находим индекс строки для обновления
         records = worksheet.get_all_records()
         for idx, record in enumerate(records):
-            if record['id'] == vpnkey.id:  # Убедитесь, что ID сравнивается как строка
-                # Индекс строки в таблице (нужно добавить 2, так как get_all_records() пропускает строку заголовков)
+            if record['id'] == vpnkey.id:
                 row_index = idx + 2
 
                 update_data = [
@@ -68,13 +68,71 @@ class GoogleSheetsMethods:
                     vpnkey.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ]
 
-                # Обновляем указанные поля
                 worksheet.update(f'C{row_index}', [[update_data[0]]])
                 worksheet.update(f'D{row_index}', [[update_data[1]]])
                 worksheet.update(f'E{row_index}', [[update_data[2]]])
                 worksheet.update(f'G{row_index}', [[update_data[3]]])
 
-                return 'successful'
+                return True
 
-        return 'record not found'
+        return False
 
+    def get_subscription(self, tg_id):
+        """Проверить наличие подписки по tg_id в таблице Subscriptions."""
+        worksheet = self.spreadsheet.worksheet('Subscriptions')
+        subscriptions = worksheet.get_all_records()
+
+        for subscription in subscriptions:
+            if subscription.get('tg_id') == tg_id:
+                return False
+
+        return True
+
+    def create_sub(self, sub: Subscription):
+        worksheet = self.spreadsheet.worksheet('Subscriptions')
+
+        subscription = [
+            str(sub.id),
+            str(sub.tg_id),
+            str(sub.service_id),
+            str(sub.vpn_key_id),
+            sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
+            sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
+            sub.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            sub.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+        ]
+        worksheet.append_row(subscription, value_input_option='RAW')
+        return True
+
+    from datetime import datetime
+
+    def update_sub(self, sub: Subscription):
+        worksheet = self.spreadsheet.worksheet('Subscriptions')
+
+        if not self.get_subscription(sub.tg_id):
+            self.create_sub(sub)
+        else:
+            subscriptions = worksheet.get_all_records()
+            # Ищем строку с соответствующим tg_id
+            for idx, record in enumerate(subscriptions):
+                if record['tg_id'] == sub.tg_id:
+                    # Найдена строка для обновления, получаем индекс
+                    row_index = idx + 2  # Добавляем 2, чтобы учесть строку заголовков
+
+                    # Подготавливаем данные для обновления
+                    update_data = [
+                        sub.tg_id,
+                        str(sub.service_id),
+                        str(sub.vpn_key_id),
+                        sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                        sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    ]
+
+                    # Обновляем основные данные в строке
+                    worksheet.update(f'B{row_index}:F{row_index}', [update_data])
+
+                    # Отдельно обновляем поле updated_at
+                    updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    worksheet.update(f'H{row_index}', updated_at)
+
+        return True
