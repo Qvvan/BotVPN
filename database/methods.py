@@ -54,4 +54,6 @@ class GoogleSheetsMethods:
 
     @staticmethod
     def get_vpn_key(self, vpn: VPNKey):
-        pass
+        worksheet = self.spreadsheet.worksheet('VPNKeys')
+        services = worksheet.get_all_records()
+        return services
