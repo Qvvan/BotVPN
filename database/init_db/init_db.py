@@ -1,59 +1,37 @@
+import asyncpg
 import logging
-from typing import List
-
-import gspread
-
+from database.main_db import PostgresMethods
 from database.db import DB
-from database.init_db.db_connect import GoogleSheetsConnection
-from database.main_db import GoogleSheetsMethods
-from models.models import Users, Service, VPNKey, Subscription, Log, Transaction
 
 logger = logging.getLogger(__name__)
 
 
-def create_sheet_if_not_exists(spreadsheet, sheet_name: str, columns: List[str]):
-    """Создать новый лист, если он не существует."""
-    try:
-        spreadsheet.worksheet(sheet_name)
-        logger.info(f"Лист уже существует: {sheet_name}")
-    except gspread.exceptions.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(title=sheet_name, rows=100, cols=len(columns))
-        worksheet.insert_row(columns, 1)
-        logger.info(f"Создан лист: {sheet_name} с колонками: {columns}")
+class InitDB:
+    def __init__(self, config):
+        self.config = config
+        self.connection = None
 
-
-def initialize_sheets(config, connection):
-    """Инициализировать листы в Google Sheets."""
-    try:
-        spreadsheet = connection.client.open_by_key(config.google_sheets.spreadsheet_id)
-    except Exception as e:
-        logger.error("Ошибка при установлении соединения с Google Sheets", exc_info=True)
-        raise
-
-    sheets = {
-        'Users': Users,
-        'Services': Service,
-        'VPNKeys': VPNKey,
-        'Subscriptions': Subscription,
-        'Logs': Log,
-        'Transactions': Transaction,
-    }
-
-    for sheet_name, model in sheets.items():
-        expected_columns = list(model.__fields__.keys())
+    async def connect(self):
         try:
-            create_sheet_if_not_exists(spreadsheet, sheet_name, expected_columns)
+            # Подключаемся к базе данных
+            self.connection = await asyncpg.connect(
+                host=self.config.database.host,
+                port=self.config.database.port,
+                database=self.config.database.name,
+                user=self.config.database.user,
+                password=self.config.database.password
+            )
+            logger.info("Успешное подключение к базе данных PostgreSQL.")
+
+            # Инициализируем методы работы с базой данных и устанавливаем их в статическом классе DB
+            methods = PostgresMethods(self.connection)
+            DB.set(methods)
+
         except Exception as e:
-            logger.error(f"Ошибка при работе с листом: {sheet_name}", exc_info=True)
+            logger.error("Ошибка при подключении к базе данных PostgreSQL.", exc_info=True)
+            raise
 
-
-def InitDB(config):
-    """Инициализировать БД, создать все таблицы если их нет."""
-    try:
-        connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
-        initialize_sheets(config, connection)
-        method = GoogleSheetsMethods(connection, config.google_sheets.spreadsheet_id, config.google_sheets.crypto_key)
-        DB.set(method)
-    except Exception as e:
-        logger.error("Ошибка при инициализации базы данных", exc_info=True)
-        raise
+    async def close(self):
+        if self.connection:
+            await self.connection.close()
+            logger.info("Соединение с базой данных закрыто.")

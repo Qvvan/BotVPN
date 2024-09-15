@@ -1,30 +1,32 @@
 import logging
-import os
-
-import gspread
-from google.oauth2.service_account import Credentials
+import psycopg2
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
+class PostgreSQLConnection:
+    def __init__(self, db_name: str, user: str, password: str, host: str, port: int = 5432):
+        self.db_name = db_name
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
 
-class GoogleSheetsConnection:
-    def __init__(self, credentials_file: str):
-        self.credentials_file = credentials_file
-        if not os.path.isfile(self.credentials_file):
-            logger.error(f"Файл учетных данных не найден: {self.credentials_file}")
-            raise
-        self.client = self._connect()
-
-    def _connect(self):
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    @contextmanager
+    def get_connection(self):
         try:
-            credentials = Credentials.from_service_account_file(self.credentials_file, scopes=scope)
-            client = gspread.authorize(credentials)
-            logger.info("Успешное подключение к Google Sheets")
-            return client
-        except ValueError as e:
-            logger.error("Ошибка в формате файла учетных данных", exc_info=True)
+            conn = psycopg2.connect(
+                dbname=self.db_name,
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port
+            )
+            logger.info("Успешное подключение к базе данных PostgreSQL")
+            yield conn
+        except psycopg2.DatabaseError as e:
+            logger.error("Ошибка при подключении к базе данных PostgreSQL", exc_info=True)
             raise
-        except Exception as e:
-            logger.error("Ошибка при подключении к Google Sheets", exc_info=True)
-            raise
+        finally:
+            if conn:
+                conn.close()

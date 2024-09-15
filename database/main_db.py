@@ -4,14 +4,12 @@ from .methods.transactions import TransactionMethods
 from .methods.users import UserMethods
 from .methods.vpn_keys import VPNKeyMethods
 
+class PostgresMethods:
+    def __init__(self, connection):
+        self.connection = connection
 
-class GoogleSheetsMethods:
-    def __init__(self, connection, spreadsheet_id, crypto_key: str):
-        self.client = connection.client
-        self.spreadsheet = self.client.open_by_key(spreadsheet_id)
-
-        self.users = UserMethods(self.spreadsheet)
-        self.services = ServiceMethods(self.spreadsheet)
-        self.transactions = TransactionMethods(self.spreadsheet, crypto_key)
-        self.vpn_keys = VPNKeyMethods(self.spreadsheet)
-        self.subscriptions = SubscriptionMethods(self.spreadsheet)
+        self.users = UserMethods(self.connection)
+        self.services = ServiceMethods(self.connection)
+        self.transactions = TransactionMethods(self.connection)
+        self.vpn_keys = VPNKeyMethods(self.connection)
+        self.subscriptions = SubscriptionMethods(self.connection)
