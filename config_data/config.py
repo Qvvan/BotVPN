@@ -15,6 +15,7 @@ class TgBot:
 class GoogleSheetsConfig:
     credentials_file: str
     spreadsheet_id: str
+    crypto_key: str
 
 
 @dataclass
@@ -35,7 +36,8 @@ def load_config(path: str | None = None) -> Config:
             ),
             google_sheets=GoogleSheetsConfig(
                 credentials_file=env('GOOGLE_SHEETS_CREDENTIALS_FILE'),
-                spreadsheet_id=env('SPREADSHEET_ID')  # Загружаем конфигурацию для Google Sheets
+                spreadsheet_id=env('SPREADSHEET_ID'),
+                crypto_key=env('CRYPTO_KEY')
             )
         )
         logger.info("Конфигурация успешно загружена.")

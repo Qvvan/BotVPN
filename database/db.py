@@ -1,6 +1,6 @@
 from typing import Optional
 
-from database.methods import GoogleSheetsMethods
+from database.main_db import GoogleSheetsMethods
 
 class DB:
     __db: Optional[GoogleSheetsMethods] = None

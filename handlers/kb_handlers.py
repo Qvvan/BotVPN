@@ -10,8 +10,8 @@ router = Router()
 async def handle_service_callback(callback_query: CallbackQuery):
     data = callback_query.data.split(':')
     service_id = data[1]
-    service_name = data[3]
     price_service = int(float(1))
+    service_name = data[3]
     duration_days = data[4]
 
     await send_invoice_handler(message=callback_query.message,

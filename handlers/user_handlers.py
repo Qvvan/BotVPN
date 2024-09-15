@@ -12,10 +12,10 @@ router = Router()
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     user = Users(
-        tg_id=message.from_user.id,
+        tg_id=str(message.from_user.id),
         username=message.from_user.username,
     )
-    DB.get().add_user(user)
+    DB.get().users.add_user(user)
     await message.answer(text=LEXICON_RU['start'])
 
 @router.message(Command(commands='createorder'))

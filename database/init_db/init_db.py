@@ -5,7 +5,7 @@ import gspread
 
 from database.db import DB
 from database.init_db.db_connect import GoogleSheetsConnection
-from database.methods import GoogleSheetsMethods
+from database.main_db import GoogleSheetsMethods
 from models.models import Users, Service, VPNKey, Subscription, Log, Transaction
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,6 @@ def initialize_sheets(config, connection):
         logger.error("Ошибка при установлении соединения с Google Sheets", exc_info=True)
         raise
 
-    # Определяем модели для каждой таблицы
     sheets = {
         'Users': Users,
         'Services': Service,
@@ -40,7 +39,6 @@ def initialize_sheets(config, connection):
         'Transactions': Transaction,
     }
 
-    # Создаем таблицы, если они не существуют
     for sheet_name, model in sheets.items():
         expected_columns = list(model.__fields__.keys())
         try:
@@ -54,8 +52,8 @@ def InitDB(config):
     try:
         connection = GoogleSheetsConnection(config.google_sheets.credentials_file)
         initialize_sheets(config, connection)
-        methods = GoogleSheetsMethods(connection, config.google_sheets.spreadsheet_id)
-        DB.set(methods)
+        method = GoogleSheetsMethods(connection, config.google_sheets.spreadsheet_id, config.google_sheets.crypto_key)
+        DB.set(method)
     except Exception as e:
         logger.error("Ошибка при инициализации базы данных", exc_info=True)
         raise

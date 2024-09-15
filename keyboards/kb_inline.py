@@ -16,7 +16,7 @@ class InlineKeyboards:
     @staticmethod
     def create_order_keyboards() -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
-        services = DB.get().get_services()  # Получаем услуги из базы данных
+        services = DB.get().services.get_services()
         keyboard = InlineKeyboardBuilder()
 
         buttons: list[InlineKeyboardButton] = []
@@ -38,7 +38,6 @@ class InlineKeyboards:
         keyboard.row(*buttons, width=len(buttons))
 
         return keyboard.as_markup()
-
 
     @staticmethod
     def create_pay(price) -> InlineKeyboardMarkup:
