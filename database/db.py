@@ -1,18 +1,17 @@
 from typing import Optional
-
-from database.main_db import GoogleSheetsMethods
+from database.postgres_methods import PostgresMethods
 
 class DB:
-    __db: Optional[GoogleSheetsMethods] = None
+    __db: Optional[PostgresMethods] = None
 
     @staticmethod
-    def set(methods: GoogleSheetsMethods):
+    def set(methods: PostgresMethods):
         """Установить методы для работы с базой данных."""
         DB.__db = methods
 
     @staticmethod
-    def get() -> GoogleSheetsMethods:
+    def get() -> PostgresMethods:
         """Получить методы для работы с базой данных."""
         if DB.__db is None:
-            raise RuntimeError("DB.methods не инициализирован. Пожалуйста, вызовите DB.set() сначала.")
+            raise RuntimeError("DB не инициализирован. Пожалуйста, вызовите DB.set() сначала.")
         return DB.__db

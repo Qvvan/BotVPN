@@ -1,37 +1,39 @@
-import asyncpg
-import logging
-from database.main_db import PostgresMethods
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database.postgres_methods import PostgresMethods
 from database.db import DB
+from models.models import Base
 
-logger = logging.getLogger(__name__)
+# Глобальные переменные для хранения engine и sessionmaker
+engine = None
+SessionLocal = None
 
 
-class InitDB:
-    def __init__(self, config):
-        self.config = config
-        self.connection = None
+def init_db(config):
+    global engine, SessionLocal
 
-    async def connect(self):
-        try:
-            # Подключаемся к базе данных
-            self.connection = await asyncpg.connect(
-                host=self.config.database.host,
-                port=self.config.database.port,
-                database=self.config.database.name,
-                user=self.config.database.user,
-                password=self.config.database.password
-            )
-            logger.info("Успешное подключение к базе данных PostgreSQL.")
+    # Создаем движок базы данных (соединение)
+    engine = create_engine(config.database.database_url)
 
-            # Инициализируем методы работы с базой данных и устанавливаем их в статическом классе DB
-            methods = PostgresMethods(self.connection)
-            DB.set(methods)
+    # Создаем таблицы, если они еще не существуют
+    Base.metadata.create_all(bind=engine)
 
-        except Exception as e:
-            logger.error("Ошибка при подключении к базе данных PostgreSQL.", exc_info=True)
-            raise
+    # Создаем sessionmaker, который будет использоваться для создания сессий
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    async def close(self):
-        if self.connection:
-            await self.connection.close()
-            logger.info("Соединение с базой данных закрыто.")
+    # Создаем экземпляр сессии
+    session = SessionLocal()
+
+    # Создаем экземпляр PostgresMethods и устанавливаем его
+    postgres_methods = PostgresMethods(session, config.database.crypto_key)
+    DB.set(postgres_methods)
+
+    # Возвращаем объект sessionmaker для дальнейшего использования
+    return SessionLocal
+
+
+# Функция для получения новой сессии в других частях проекта
+def get_session():
+    if SessionLocal is None:
+        raise RuntimeError("База данных не инициализирована. Сначала вызовите init_db().")
+    return SessionLocal()

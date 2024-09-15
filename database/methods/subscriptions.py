@@ -1,56 +1,35 @@
-from models.models import Subscription
 from datetime import datetime
+
+from sqlalchemy.orm import Session
+
+from models.models import Subscriptions
 
 
 class SubscriptionMethods:
-    def __init__(self, spreadsheet):
-        self.spreadsheet = spreadsheet
+    def __init__(self, session: Session):
+        self.session = session
 
     def get_subscription(self, tg_id):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
-        subscriptions = worksheet.get_all_records()
+        subscription = self.session.query(Subscriptions).filter_by(tg_id=tg_id).first()
+        return subscription is not None
 
-        for subscription in subscriptions:
-            if subscription.get('tg_id') == tg_id:
-                return False
+    def create_sub(self, sub: Subscriptions):
+        self.session.add(sub)
+        self.session.commit()
         return True
 
-    def create_sub(self, sub: Subscription):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
+    def update_sub(self, sub: Subscriptions):
+        existing_sub = self.session.query(Subscriptions).filter_by(tg_id=sub.tg_id).first()
 
-        subscription = [
-            str(sub.tg_id),
-            str(sub.service_id),
-            str(sub.vpn_key_id),
-            sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-        ]
-        worksheet.append_row(subscription, value_input_option='RAW')
-        return True
-
-    def update_sub(self, sub: Subscription):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
-
-        if not self.get_subscription(sub.tg_id):
+        if not existing_sub:
             self.create_sub(sub)
         else:
-            subscriptions = worksheet.get_all_records()
-            for idx, record in enumerate(subscriptions):
-                if record['tg_id'] == sub.tg_id:
-                    row_index = idx + 2
+            existing_sub.service_id = sub.service_id
+            existing_sub.vpn_key_id = sub.vpn_key_id
+            existing_sub.start_date = sub.start_date
+            existing_sub.end_date = sub.end_date
+            existing_sub.updated_at = datetime.now()
 
-                    update_data = [
-                        sub.tg_id,
-                        str(sub.service_id),
-                        str(sub.vpn_key_id),
-                        sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
-                        sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
-                    ]
-
-                    worksheet.update(f'A{row_index}:E{row_index}', [update_data])
-                    updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    worksheet.update(f'G{row_index}', updated_at)
+            self.session.commit()
 
         return True

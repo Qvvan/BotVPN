@@ -6,10 +6,11 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from config_data.config import load_config, Config
-from database.init_db.init_db import InitDB
+from database.init_db.init_db import init_db
 from handlers import user_handlers, kb_handlers, invoice_handlers
 
 logger = logging.getLogger(__name__)
+
 
 async def main():
     logging.basicConfig(
@@ -17,12 +18,11 @@ async def main():
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s')
 
-    # Выводим в консоль информацию о начале запуска бота
     logger.info('Starting bot')
 
-    # Загружаем конфиг в переменную config
     config: Config = load_config()
-    InitDB(config)
+
+    init_db(config)
 
     bot = Bot(
         token=config.tg_bot.token,

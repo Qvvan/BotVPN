@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timedelta
 from database.db import DB
-from models.models import Transaction, Subscription, VPNKey
+from models.models import Transactions, Subscriptions, VPNKeys
 from lexicon.lexicon_ru import LEXICON_RU
 
 
@@ -40,9 +40,9 @@ async def refund_payment(message):
     await message.bot.refund_star_payment(message.from_user.id, message.successful_payment.telegram_payment_charge_id)
 
 
-def create_transaction(message, status) -> Transaction:
+def create_transaction(message, status) -> Transactions:
     in_payload = message.successful_payment.invoice_payload.split(':')
-    return Transaction(
+    return Transactions(
         transaction_id=message.successful_payment.telegram_payment_charge_id,
         service_id=in_payload[0],
         tg_id=str(message.from_user.id),
@@ -51,7 +51,7 @@ def create_transaction(message, status) -> Transaction:
 
 
 def update_vpn_key(vpn_key_id: str):
-    DB.get().vpn_keys.update_vpn_key(VPNKey(
+    DB.get().vpn_keys.update_vpn_key(VPNKeys(
         id=vpn_key_id,
         is_active=1,
         is_blocked=0,
@@ -63,7 +63,7 @@ def create_subscription(message, vpn_key: str) -> bool:
     service_id = in_payload[0]
     durations_days = in_payload[1]
 
-    return DB.get().subscriptions.create_sub(Subscription(
+    return DB.get().subscriptions.create_sub(Subscriptions(
         tg_id=str(message.from_user.id),
         service_id=service_id,
         vpn_key_id=vpn_key,

@@ -1,41 +1,30 @@
 import base64
-
 from cryptography.fernet import Fernet
-
-from models.models import Transaction
+from sqlalchemy.orm import Session
+from models.models import Transactions
 
 
 class TransactionMethods:
-    def __init__(self, spreadsheet, crypto_key):
-        self.spreadsheet = spreadsheet
+    def __init__(self, session: Session, crypto_key: str):
+        self.session = session
         self.cipher_suite = Fernet(crypto_key)
 
-    def add_transaction(self, transaction: Transaction):
-        worksheet = self.spreadsheet.worksheet('Transactions')
-
+    def add_transaction(self, transaction: Transactions):
+        # Шифрование transaction_id перед добавлением в базу данных
         encrypted_transaction_id = self.cipher_suite.encrypt(transaction.transaction_id.encode())
-        encrypted_str = base64.urlsafe_b64encode(encrypted_transaction_id).decode('utf-8')
+        transaction.transaction_id = base64.urlsafe_b64encode(encrypted_transaction_id).decode('utf-8')
 
-        transaction_data = [
-            encrypted_str,
-            transaction.service_id,
-            transaction.tg_id,
-            transaction.status,
-            transaction.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-        ]
-
-        worksheet.append_row(transaction_data, value_input_option='USER_ENTERED')
+        self.session.add(transaction)
+        self.session.commit()
         return True
 
     def cancel_transaction(self, encrypted_transaction_id):
-        worksheet = self.spreadsheet.worksheet('Transactions')
+        # Декодируем из base64 и расшифровываем transaction_id
+        decoded_data = base64.urlsafe_b64decode(encrypted_transaction_id)
+        decrypted_transaction_id = self.cipher_suite.decrypt(decoded_data).decode('utf-8')
 
-        cell = worksheet.find(encrypted_transaction_id)
-        if cell:
-            decrypted_data = self.cipher_suite.decrypt(encrypted_transaction_id).decode('utf-8')
-            row = worksheet.row_values(cell.row)
-            tg_id = row[2]
-            return tg_id, decrypted_data
-
+        transaction = self.session.query(Transactions).filter_by(transaction_id=encrypted_transaction_id).first()
+        if transaction:
+            tg_id = transaction.tg_id
+            return tg_id, decrypted_transaction_id
         return None, None
