@@ -7,10 +7,10 @@ from lexicon.lexicon_ru import LEXICON_RU
 
 async def process_successful_payment(message):
     await message.answer(text="Спасибо за покупку!")
-
+    await refund_payment(message)
     transaction = create_transaction(message, 'succesful')
     transaction_state = DB.get().transactions.add_transaction(transaction)
-    await refund_payment(message)
+
 
     vpn_key = DB.get().vpn_keys.get_vpn_key()
     if vpn_key:
@@ -40,14 +40,24 @@ async def refund_payment(message):
     await message.bot.refund_star_payment(message.from_user.id, message.successful_payment.telegram_payment_charge_id)
 
 
-def create_transaction(message, status) -> Transactions:
+def create_transaction(message, status: str) -> Transactions:
+    # Разбираем payload
     in_payload = message.successful_payment.invoice_payload.split(':')
-    return Transactions(
-        transaction_id=message.successful_payment.telegram_payment_charge_id,
-        service_id=in_payload[0],
-        tg_id=str(message.from_user.id),
+
+    # Получаем необходимые данные
+    transaction_code = message.successful_payment.telegram_payment_charge_id
+    service_id = in_payload[0]
+    user_id = str(message.from_user.id)
+
+    # Вызываем функцию добавления транзакции, передавая параметры
+    transaction = DB.get().transactions.add_transaction(
+        transaction_code=transaction_code,
+        service_id=service_id,
+        user_id=user_id,
         status=status
     )
+
+    return transaction
 
 
 def update_vpn_key(vpn_key_id: str):

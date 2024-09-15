@@ -6,8 +6,8 @@ from database.db import DB
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
-    service_id: int
-    service_price: int
+    service_id: str
+    service_price: str
     service_name: str
     duration_days: str
 
@@ -22,10 +22,10 @@ class InlineKeyboards:
         buttons: list[InlineKeyboardButton] = []
 
         for service in services:
-            service_id = service['id']
-            service_name = service['name']
-            service_price = service['price']
-            duration_days = str(service['duration_days'])
+            service_id = str(service.service_id)
+            service_name = service.name
+            service_price = str(service.price)
+            duration_days = str(service.duration_days)
 
             callback_data = ServiceCallbackFactory(
                 service_id=service_id,
