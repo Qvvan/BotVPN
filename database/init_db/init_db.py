@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from database.db import DB
@@ -26,3 +27,13 @@ def init_db(config):
     # Создаем экземпляр PostgresMethods и устанавливаем его
     postgres_methods = PostgresMethods(session, config.database.crypto_key)
     DB.set(postgres_methods)
+
+class DataBase():
+    def __init__(self, cfg):
+        self.connect = cfg.database.database_url
+        self.async_engine = create_async_engine(self.connect)
+        self.Session = async_sessionmaker(bind=self.async_engine, class_=AsyncSession)
+
+    async def create_db(self):
+        async with self.async_engine.begin() as connect:
+            await connect.run_sync(Base.metadata.create_all)
