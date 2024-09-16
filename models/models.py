@@ -35,9 +35,9 @@ class Subscriptions(Base):
     __tablename__ = 'subscriptions'
 
     subscription_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)  # Removed ForeignKey
-    service_id = Column(Integer, nullable=False)  # Removed ForeignKey
-    vpn_key_id = Column(Integer, nullable=False)  # Removed ForeignKey
+    user_id = Column(Integer, nullable=False)
+    service_id = Column(Integer, nullable=False)
+    vpn_key_id = Column(Integer, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -60,5 +60,6 @@ class Transactions(Base):
     service_id = Column(Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
     status = Column(String, nullable=False)
+    description = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

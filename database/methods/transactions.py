@@ -9,12 +9,13 @@ class TransactionMethods:
         self.session = session
         self.cipher_suite = Fernet(crypto_key)
 
-    def add_transaction(self, transaction_code: str, service_id: int, user_id: int, status: str) -> Transactions:
+    def add_transaction(self, transaction_code: str, service_id: int, user_id: int, status: str, description: str) -> Transactions:
         transaction = Transactions(
             transaction_code=transaction_code,
             service_id=service_id,
             user_id=user_id,
-            status=status
+            status=status,
+            description=description,
         )
 
         encrypted_transaction_id = self.cipher_suite.encrypt(transaction_code.encode())
@@ -31,6 +32,6 @@ class TransactionMethods:
 
         transaction = self.session.query(Transactions).filter_by(transaction_code=encrypted_transaction_code).first()
         if transaction:
-            tg_id = transaction.tg_id
+            tg_id = transaction.user_id
             return tg_id, decrypted_transaction_id
         return None, None
