@@ -1,22 +1,26 @@
-from sqlalchemy.orm import Session
+# database/methods/service_methods.py
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from models.models import Services
 
 
 class ServiceMethods:
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
-    def get_services(self):
-        services = self.session.query(Services).all()
+    async def get_services(self):
+        result = await self.session.execute(select(Services))
+        services = result.scalars().all()
         return services
 
-    def add_service(self, name: str, duration_days: int, price: int):
+    async def add_service(self, name: str, duration_days: int, price: int):
         new_service = Services(
             name=name,
             duration_days=duration_days,
             price=price
         )
         self.session.add(new_service)
-        self.session.commit()
+        await self.session.commit()
         return new_service

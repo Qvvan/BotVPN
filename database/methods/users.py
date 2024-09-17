@@ -1,19 +1,28 @@
-from sqlalchemy.orm import Session
+# database/methods/user_methods.py
+
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from models.models import Users
 
 
 class UserMethods:
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
-    def user_exists(self, tg_id: str) -> bool:
-        user = self.session.query(Users).filter_by(tg_id=tg_id).first()
+    async def user_exists(self, tg_id: str) -> bool:
+        result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
+        user = result.scalars().first()
         return user is not None
 
-    def add_user(self, user: Users):
-        if self.user_exists(user.tg_id):
+    async def add_user(self, user: Users):
+        if await self.user_exists(user.tg_id):
             return
-
-        self.session.add(user)
-        self.session.commit()
+        try:
+            self.session.add(user)
+            await self.session.commit()
+        except IntegrityError as e:
+            await self.session.rollback()
+            # Replace print with proper logging if needed
+            print(f"Error adding user: {e}")

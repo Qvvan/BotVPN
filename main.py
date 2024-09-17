@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from config_data.config import load_config, Config
-from database.init_db.init_db import init_db, DataBase
+from database.init_db import DataBase
 from handlers import user_handlers, kb_handlers, invoice_handlers
 
 logger = logging.getLogger(__name__)
@@ -22,9 +22,8 @@ async def main():
 
     config: Config = load_config()
 
-    init_db(config)
-
-    db = DataBase(config)
+    db = DataBase()
+    await db.create_db()
 
     bot = Bot(
         token=config.tg_bot.token,

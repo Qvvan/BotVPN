@@ -1,8 +1,10 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, Boolean
+
+from sqlalchemy import Column, String, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
 
 class Users(Base):
     __tablename__ = 'users'
@@ -12,6 +14,7 @@ class Users(Base):
     username = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+
 class Services(Base):
     __tablename__ = 'services'
 
@@ -19,6 +22,7 @@ class Services(Base):
     name = Column(String, nullable=False)
     duration_days = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+
 
 class VPNKeys(Base):
     __tablename__ = 'vpn_keys'
@@ -30,6 +34,7 @@ class VPNKeys(Base):
     is_blocked = Column(Integer, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
 
 class Subscriptions(Base):
     __tablename__ = 'subscriptions'
@@ -43,6 +48,7 @@ class Subscriptions(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+
 class Logs(Base):
     __tablename__ = 'logs'
 
@@ -51,6 +57,7 @@ class Logs(Base):
     action = Column(String, nullable=False)
     details = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
 
 class Transactions(Base):
     __tablename__ = 'transactions'

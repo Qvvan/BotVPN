@@ -2,12 +2,13 @@ from aiogram import Router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
-from database.db import DB
 from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from models.models import Users
+from database.init_db import DataBase
 
 router = Router()
+
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
@@ -15,8 +16,8 @@ async def process_start_command(message: Message):
         tg_id=str(message.from_user.id),
         username=message.from_user.username,
     )
-    DB.get().users.add_user(user)
     await message.answer(text=LEXICON_RU['start'])
+
 
 @router.message(Command(commands='createorder'))
 async def create_order(message: Message):

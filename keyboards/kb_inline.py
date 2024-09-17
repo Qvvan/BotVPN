@@ -2,7 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from database.db import DB
+from database.init_db import DataBase
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
@@ -16,7 +16,8 @@ class InlineKeyboards:
     @staticmethod
     def create_order_keyboards() -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
-        services = DB.get().services.get_services()
+        db = DataBase()
+        services = db.get_service_methods().get_services()
         keyboard = InlineKeyboardBuilder()
 
         buttons: list[InlineKeyboardButton] = []
