@@ -1,6 +1,4 @@
-# database/methods/user_methods.py
-
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -12,16 +10,19 @@ class UserMethods:
         self.session = session
 
     async def user_exists(self, tg_id: str) -> bool:
-        result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
-        user = result.scalars().first()
-        return user is not None
+        try:
+            result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
+            user = result.scalars().first()
+            return user is not None
+        except SQLAlchemyError as e:
+            print(f"Error checking if user exists: {e}")
+            return False
 
     async def add_user(self, user: Users):
-        if await self.user_exists(user.tg_id):
-            return
         try:
-            self.session.add(user)
+            if not await self.user_exists(user.tg_id):
+                self.session.add(user)
         except IntegrityError as e:
-            await self.session.rollback()
-            # Replace print with proper logging if needed
+            print(f"Error adding user: {e}")
+        except SQLAlchemyError as e:
             print(f"Error adding user: {e}")

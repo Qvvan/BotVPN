@@ -1,7 +1,6 @@
-# database/methods/vpn_key_methods.py
-
 from datetime import datetime
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -13,22 +12,32 @@ class VPNKeyMethods:
         self.session = session
 
     async def update_vpn_key(self, vpnkey: VPNKeys):
-        result = await self.session.execute(select(VPNKeys).filter_by(id=vpnkey.id))
-        existing_key = result.scalars().first()
+        try:
+            result = await self.session.execute(select(VPNKeys).filter_by(vpn_key_id=vpnkey.vpn_key_id))
+            existing_key = result.scalars().first()
 
-        if existing_key:
-            existing_key.issued_at = vpnkey.issued_at
-            existing_key.is_active = vpnkey.is_active
-            existing_key.is_blocked = vpnkey.is_blocked
-            existing_key.updated_at = datetime.now()
+            if existing_key:
+                existing_key.issued_at = vpnkey.issued_at
+                existing_key.is_active = vpnkey.is_active
+                existing_key.is_blocked = vpnkey.is_blocked
+                existing_key.issued_at = datetime.now()
+                existing_key.updated_at = datetime.now()
 
-            self.session.add(existing_key)
-            return True
-        return False
+                self.session.add(existing_key)
+                return True
+            return False
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            print(f"Error updating VPN key: {e}")
+            return False
 
     async def get_vpn_key(self):
-        result = await self.session.execute(
-            select(VPNKeys).filter_by(is_active=False, is_blocked=False)
-        )
-        vpn_key = result.scalars().first()
-        return vpn_key
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(is_active=0, is_blocked=0)
+            )
+            vpn_key = result.scalars().first()
+            return vpn_key
+        except SQLAlchemyError as e:
+            print(f"Error retrieving VPN key: {e}")
+            return None

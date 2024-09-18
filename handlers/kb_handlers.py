@@ -8,7 +8,6 @@ router = Router()
 
 @router.callback_query()
 async def handle_service_callback(callback_query: CallbackQuery):
-    print(callback_query.data)
     data = callback_query.data.split(':')
     service_id = data[1]
     price_service = int(float(1))
