@@ -19,7 +19,6 @@ class SubscriptionMethods:
 
     async def create_sub(self, sub: Subscriptions):
         self.session.add(sub)
-        await self.session.commit()
         return True
 
     async def update_sub(self, sub: Subscriptions):
@@ -35,6 +34,6 @@ class SubscriptionMethods:
             existing_sub.end_date = sub.end_date
             existing_sub.updated_at = datetime.now()
 
-            await self.session.commit()
+            self.session.add(existing_sub)
 
         return True

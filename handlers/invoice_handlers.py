@@ -17,7 +17,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
         provider_token="",
         payload=f"{service_id}:{duration_days}",
         currency="XTR",
-        reply_markup=InlineKeyboards.create_pay(price_service),
+        reply_markup=await InlineKeyboards.create_pay(price_service),
     )
 
 

@@ -22,7 +22,7 @@ class VPNKeyMethods:
             existing_key.is_blocked = vpnkey.is_blocked
             existing_key.updated_at = datetime.now()
 
-            await self.session.commit()
+            self.session.add(existing_key)
             return True
         return False
 

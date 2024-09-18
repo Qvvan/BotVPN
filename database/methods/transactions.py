@@ -10,9 +10,9 @@ from models.models import Transactions
 
 
 class TransactionMethods:
-    def __init__(self, session: AsyncSession, crypto_key: str):
+    def __init__(self, session: AsyncSession):
         self.session = session
-        self.cipher_suite = Fernet(crypto_key)
+        # self.cipher_suite = Fernet(crypto_key)
 
     async def add_transaction(self, transaction_code: str, service_id: int, user_id: int, status: str,
                               description: str) -> Transactions:
@@ -28,7 +28,6 @@ class TransactionMethods:
         transaction.transaction_code = base64.urlsafe_b64encode(encrypted_transaction_id).decode('utf-8')
 
         self.session.add(transaction)
-        await self.session.commit()
 
         return transaction
 

@@ -21,7 +21,6 @@ class UserMethods:
             return
         try:
             self.session.add(user)
-            await self.session.commit()
         except IntegrityError as e:
             await self.session.rollback()
             # Replace print with proper logging if needed

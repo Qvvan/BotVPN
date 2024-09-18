@@ -22,5 +22,4 @@ class ServiceMethods:
             price=price
         )
         self.session.add(new_service)
-        await self.session.commit()
         return new_service

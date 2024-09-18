@@ -1,62 +1,58 @@
 import time
 from datetime import datetime, timedelta
 
-from database.db import DB
+from database.db_methods import MethodsManager
+from database.init_db import DataBase
 from lexicon.lexicon_ru import LEXICON_RU
 from main import logger
 from models.models import Transactions, Subscriptions, VPNKeys
 
+
 async def process_successful_payment(message):
     await refund_payment(message)
     await message.answer(text="Спасибо за покупку!")
+    db = DataBase()
+    async with db.Session() as session:
+        try:
+            async with session.begin():
+                session_methods = MethodsManager(session)
+                logger.info("Transaction started for adding user and service.")
 
-    connection = DB.get().connection
-    try:
-        print('Вот тут мы скоро начнем')
-        connection.begin()
-        logger.info("Transaction started for adding user and service.")
+                # Создание транзакции
+                transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
 
-        # Создание транзакции
-        transaction_state = await create_transaction(message, 'successful', 'successful')
-
-        # Получение ключа VPN
-        vpn_key = DB.get().vpn_keys.get_vpn_key(connection)
-        if vpn_key:
-            if transaction_state:
-                await update_vpn_key(str(vpn_key['id']))
-                subscription_created = await create_subscription(message, vpn_key['key'])
-                if subscription_created:
-                    await send_success_response(message, vpn_key['key'])
+                # Получение ключа VPN
+                vpn_key = await session_methods.vpn_keys.get_vpn_key()
+                if vpn_key:
+                    if transaction_state:
+                        await update_vpn_key(str(vpn_key['id']), session_methods)
+                        subscription_created = await create_subscription(message, vpn_key['key'], session_methods)
+                        if subscription_created:
+                            await send_success_response(message, vpn_key['key'])
+                            await session.commit()
+                        else:
+                            raise Exception("Ошибка создания подписки")
+                    else:
+                        raise Exception("Ошибка сохранения транзакции")
                 else:
-                    await message.answer(text="Не удалось создать подписку. Попробуйте позже.")
-                    raise Exception("Ошибка создания подписки")
-            else:
-                await message.answer(text="Не удалось сохранить транзакцию. Попробуйте позже.")
-                raise Exception("Ошибка сохранения транзакции")
-        else:
-            await message.answer(text="К сожалению, ключи закончились, обратитесь в тех. поддержку")
-            raise Exception("Нет доступных ключей")
+                    raise Exception("Нет доступных ключей")
 
-        # Коммит транзакции
-        connection.commit()
-        logger.info("Transaction committed successfully.")
-
-    except Exception as e:
-        # Откат транзакции в случае ошибки
-        connection.rollback()
-        logger.error(f"Error during transaction processing: {e}")
-        await message.answer(text=f"К сожалению, покупка отменена:\n {e}")
-        await create_transaction(message, status='отмена', description=str(e))
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error during transaction processing: {e}")
+            await message.answer(text=f"К сожалению, покупка отменена:\n {e}")
+            await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
+            await session.commit()
 
 
-async def create_transaction(message, status, description: str) -> Transactions:
+async def create_transaction(message, status, description: str, session_methods) -> Transactions:
     in_payload = message.successful_payment.invoice_payload.split(':')
 
     transaction_code = message.successful_payment.telegram_payment_charge_id
     service_id = int(in_payload[0])
     user_id = message.from_user.id
 
-    transaction = DB.get().transactions.add_transaction(
+    transaction = await session_methods.transactions.add_transaction(
         transaction_code=transaction_code,
         service_id=service_id,
         user_id=user_id,
@@ -71,20 +67,20 @@ async def refund_payment(message):
     await message.bot.refund_star_payment(message.from_user.id, message.successful_payment.telegram_payment_charge_id)
 
 
-async def update_vpn_key(vpn_key_id: str):
-    DB.get().vpn_keys.update_vpn_key(VPNKeys(
+async def update_vpn_key(vpn_key_id: str, session_methods):
+    await session_methods.vpn_keys.update_vpn_key(VPNKeys(
         id=vpn_key_id,
         is_active=1,
         is_blocked=0,
     ))
 
 
-async def create_subscription(message, vpn_key: str) -> bool:
+async def create_subscription(message, vpn_key: str, session_methods) -> bool:
     in_payload = message.successful_payment.invoice_payload.split(':')
     service_id = in_payload[0]
     durations_days = in_payload[1]
 
-    return DB.get().subscriptions.create_sub(Subscriptions(
+    return await session_methods.subscription.create_sub(Subscriptions(
         tg_id=str(message.from_user.id),
         service_id=service_id,
         vpn_key_id=vpn_key,

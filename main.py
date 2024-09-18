@@ -21,7 +21,6 @@ async def main():
     logger.info('Starting bot')
 
     config: Config = load_config()
-
     db = DataBase()
     await db.create_db()
 
