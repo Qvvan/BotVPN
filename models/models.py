@@ -14,14 +14,6 @@ class Users(Base):
     username = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-class Admins(Base):
-    __tablename__ = 'admins'
-
-    user_id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(Integer, unique=True, index=True, nullable=False)
-    username = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
 
 class Services(Base):
     __tablename__ = 'services'
