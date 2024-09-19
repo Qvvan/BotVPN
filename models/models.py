@@ -11,7 +11,7 @@ class Users(Base):
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     tg_id = Column(Integer, unique=True, index=True, nullable=False)
-    username = Column(String, nullable=False)
+    username = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -29,11 +29,11 @@ class VPNKeys(Base):
 
     vpn_key_id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String, unique=True, nullable=False)
-    issued_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    is_active = Column(Integer, nullable=False, default=False)
+    issued_at = Column(DateTime, default=None)
+    is_active = Column(Integer, default=False)
     is_blocked = Column(Integer, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Subscriptions(Base):
@@ -45,8 +45,8 @@ class Subscriptions(Base):
     vpn_key_id = Column(Integer, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Logs(Base):
@@ -56,7 +56,7 @@ class Logs(Base):
     user_id = Column(Integer, nullable=False)
     action = Column(String, nullable=False)
     details = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Transactions(Base):
@@ -66,7 +66,7 @@ class Transactions(Base):
     transaction_code = Column(String, unique=True, nullable=False)
     service_id = Column(Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
-    status = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    status = Column(String)
+    description = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

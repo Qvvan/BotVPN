@@ -6,7 +6,7 @@ from handlers.invoice_handlers import send_invoice_handler
 router = Router()
 
 
-@router.callback_query()
+@router.callback_query(lambda c: c.data.startswith('service'))
 async def handle_service_callback(callback_query: CallbackQuery):
     data = callback_query.data.split(':')
     service_id = data[1]
