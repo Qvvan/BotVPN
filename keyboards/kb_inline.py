@@ -2,46 +2,67 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from database.db import DB
+from database.db_methods import MethodsManager
+from database.init_db import DataBase
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
-    service_id: int
-    service_price: int
+    service_id: str
+    service_price: str
     service_name: str
     duration_days: str
 
 
 class InlineKeyboards:
     @staticmethod
-    def create_order_keyboards() -> InlineKeyboardMarkup:
+    async def create_order_keyboards() -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
-        services = DB.get().services.get_services()
-        keyboard = InlineKeyboardBuilder()
+        db = DataBase()
+        async with db.Session() as session:
+            session_methods = MethodsManager(session)
+            services = await session_methods.services.get_services()
+            keyboard = InlineKeyboardBuilder()
 
-        buttons: list[InlineKeyboardButton] = []
+            buttons: list[InlineKeyboardButton] = []
 
-        for service in services:
-            service_id = service['id']
-            service_name = service['name']
-            service_price = service['price']
-            duration_days = str(service['duration_days'])
+            for service in services:
+                service_id = str(service.service_id)
+                service_name = service.name
+                service_price = str(service.price)
+                duration_days = str(service.duration_days)
 
-            callback_data = ServiceCallbackFactory(
-                service_id=service_id,
-                service_price=service_price,
-                service_name=service_name,
-                duration_days=duration_days,
-            ).pack()
+                callback_data = ServiceCallbackFactory(
+                    service_id=service_id,
+                    service_price=service_price,
+                    service_name=service_name,
+                    duration_days=duration_days,
+                ).pack()
 
-            buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
-        keyboard.row(*buttons, width=len(buttons))
+                buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
+            keyboard.row(*buttons, width=len(buttons))
 
-        return keyboard.as_markup()
+            return keyboard.as_markup()
 
     @staticmethod
-    def create_pay(price) -> InlineKeyboardMarkup:
+    async def create_pay(price) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
 
         return keyboard.as_markup()
+
+    @staticmethod
+    async def get_support() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        support_user_id = "123456789"  # Замените на реальный Telegram ID
+        support_link = f"t.me/{support_user_id}"
+
+        # Создание кнопки со ссылкой на пользователя
+        support_button = InlineKeyboardButton(
+            text="Связаться с поддержкой 🛠️",
+            url=support_link
+        )
+
+        keyboard.add(support_button)
+        return keyboard.as_markup()
+

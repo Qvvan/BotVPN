@@ -1,25 +1,28 @@
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from models.models import Users
 
 
 class UserMethods:
-    def __init__(self, spreadsheet):
-        self.spreadsheet = spreadsheet
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def user_exists(self, tg_id: str) -> bool:
-        worksheet = self.spreadsheet.worksheet('Users')
-        cell = worksheet.find(tg_id)
-        return cell is not None
+    async def user_exists(self, tg_id: int) -> bool:
+        try:
+            result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
+            user = result.scalars().first()
+            return user is not None
+        except SQLAlchemyError as e:
+            print(f"Error checking if user exists: {e}")
+            return False
 
-    def add_user(self, user: Users):
-        if self.user_exists(str(user.tg_id)):
-            return
-
-        worksheet = self.spreadsheet.worksheet('Users')
-
-        user_data = [
-            str(user.tg_id),
-            user.username,
-            user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-        ]
-
-        worksheet.append_row(user_data, value_input_option='RAW')
+    async def add_user(self, user: Users):
+        try:
+            if not await self.user_exists(user.tg_id):
+                self.session.add(user)
+        except IntegrityError as e:
+            print(f"Error adding user: {e}")
+        except SQLAlchemyError as e:
+            print(f"Error adding user: {e}")

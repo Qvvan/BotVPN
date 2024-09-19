@@ -5,6 +5,7 @@ from environs import Env
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class TgBot:
     token: str
@@ -12,16 +13,23 @@ class TgBot:
 
 
 @dataclass
-class GoogleSheetsConfig:
-    credentials_file: str
-    spreadsheet_id: str
+class DatabaseConfig:
+    host: str
+    port: int
+    user: str
+    password: str
+    db_name: str
     crypto_key: str
+
+    @property
+    def database_url(self):
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db_name}"
 
 
 @dataclass
 class Config:
     tg_bot: TgBot
-    google_sheets: GoogleSheetsConfig
+    database: DatabaseConfig
 
 
 def load_config(path: str | None = None) -> Config:
@@ -34,10 +42,13 @@ def load_config(path: str | None = None) -> Config:
                 token=env('BOT_TOKEN'),
                 admin_ids=list(map(int, env.list('ADMIN_IDS')))
             ),
-            google_sheets=GoogleSheetsConfig(
-                credentials_file=env('GOOGLE_SHEETS_CREDENTIALS_FILE'),
-                spreadsheet_id=env('SPREADSHEET_ID'),
-                crypto_key=env('CRYPTO_KEY')
+            database=DatabaseConfig(
+                host=env.str('DB_HOST'),
+                port=env.int('DB_PORT'),
+                user=env.str('DB_USER'),
+                password=env.str('DB_PASSWORD'),
+                db_name=env.str('DB_NAME'),
+                crypto_key=env.str('CRYPTO_KEY')
             )
         )
         logger.info("Конфигурация успешно загружена.")

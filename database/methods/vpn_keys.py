@@ -1,39 +1,51 @@
-from models.models import VPNKey
+from datetime import datetime
+
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from models.models import VPNKeys
 
 
 class VPNKeyMethods:
-    def __init__(self, spreadsheet):
-        self.spreadsheet = spreadsheet
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def update_vpn_key(self, vpnkey: VPNKey):
-        worksheet = self.spreadsheet.worksheet('VPNKeys')
-        records = worksheet.get_all_records()
+    async def update_vpn_key(self, vpnkey: VPNKeys):
+        try:
+            result = await self.session.execute(select(VPNKeys).filter_by(vpn_key_id=vpnkey.vpn_key_id))
+            existing_key = result.scalars().first()
 
-        for idx, record in enumerate(records):
-            if str(record['id']) == vpnkey.id:
-                row_index = idx + 2
+            if existing_key:
+                existing_key.issued_at = vpnkey.issued_at
+                existing_key.is_active = vpnkey.is_active
+                existing_key.is_blocked = vpnkey.is_blocked
+                existing_key.issued_at = datetime.now()
+                existing_key.updated_at = datetime.now()
 
-                update_data = [
-                    vpnkey.issued_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    vpnkey.is_active,
-                    vpnkey.is_blocked,
-                    vpnkey.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    vpnkey.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-                ]
-
-                worksheet.update(f'C{row_index}', [[update_data[0]]])
-                worksheet.update(f'D{row_index}', [[update_data[1]]])
-                worksheet.update(f'E{row_index}', [[update_data[2]]])
-                worksheet.update(f'F{row_index}', [[update_data[3]]])
-                worksheet.update(f'G{row_index}', [[update_data[4]]])
+                self.session.add(existing_key)
                 return True
-        return False
+            return False
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            print(f"Error updating VPN key: {e}")
+            return False
 
-    def get_vpn_key(self):
-        worksheet = self.spreadsheet.worksheet('VPNKeys')
-        records = worksheet.get_all_records()
+    async def get_vpn_key(self):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(is_active=0, is_blocked=0)
+            )
+            vpn_key = result.scalars().first()
+            return vpn_key
+        except SQLAlchemyError as e:
+            print(f"Error retrieving VPN key: {e}")
+            return None
 
-        for record in records:
-            if record.get('is_active') == 0 and record.get('is_blocked') == 0:
-                return record
-        return None
+    async def add_vpn_key(self, key: str):
+        try:
+            self.session.add(VPNKeys(
+                key=key,
+            ))
+        except Exception as err:
+            return 'Не удалось добавить ключ', err

@@ -1,56 +1,66 @@
-from models.models import Subscription
 from datetime import datetime
+
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from models.models import Subscriptions, VPNKeys, Services
 
 
 class SubscriptionMethods:
-    def __init__(self, spreadsheet):
-        self.spreadsheet = spreadsheet
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def get_subscription(self, tg_id):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
-        subscriptions = worksheet.get_all_records()
+    async def get_subscription(self, user_id):
+        try:
+            # Запрос с правильными join
+            query = (
+                select(
+                    Subscriptions.start_date,
+                    Subscriptions.end_date,
+                    VPNKeys.key,
+                    Services.name
+                ).select_from(Subscriptions)
+                .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)
+                .join(Services, Subscriptions.service_id == Services.service_id)
+                .filter(Subscriptions.user_id == user_id)
+            )
 
-        for subscription in subscriptions:
-            if subscription.get('tg_id') == tg_id:
-                return False
-        return True
+            result = await self.session.execute(query)
+            subscription = result.fetchall()  # Получаем первую (и, надеюсь, единственную) запись
+            if len(subscription) == 0:
+                return None
 
-    def create_sub(self, sub: Subscription):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
+            return subscription
+        except SQLAlchemyError as e:
+            print(f"Error retrieving subscription: {e}")
+            return None
 
-        subscription = [
-            str(sub.tg_id),
-            str(sub.service_id),
-            str(sub.vpn_key_id),
-            sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            sub.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-        ]
-        worksheet.append_row(subscription, value_input_option='RAW')
-        return True
+    async def update_sub(self, sub: Subscriptions):
+        try:
+            result = await self.session.execute(select(Subscriptions).filter_by(tg_id=sub.tg_id))
+            existing_sub = result.scalars().first()
 
-    def update_sub(self, sub: Subscription):
-        worksheet = self.spreadsheet.worksheet('Subscriptions')
+            if not existing_sub:
+                await self.create_sub(sub)
+            else:
+                existing_sub.service_id = sub.service_id
+                existing_sub.vpn_key_id = sub.vpn_key_id
+                existing_sub.start_date = sub.start_date
+                existing_sub.end_date = sub.end_date
+                existing_sub.updated_at = datetime.now()
 
-        if not self.get_subscription(sub.tg_id):
-            self.create_sub(sub)
-        else:
-            subscriptions = worksheet.get_all_records()
-            for idx, record in enumerate(subscriptions):
-                if record['tg_id'] == sub.tg_id:
-                    row_index = idx + 2
+                self.session.add(existing_sub)
 
-                    update_data = [
-                        sub.tg_id,
-                        str(sub.service_id),
-                        str(sub.vpn_key_id),
-                        sub.start_date.strftime('%Y-%m-%d %H:%M:%S'),
-                        sub.end_date.strftime('%Y-%m-%d %H:%M:%S'),
-                    ]
+            return True
+        except SQLAlchemyError as e:
+            print(f"Error updating subscription: {e}")
+            return False
 
-                    worksheet.update(f'A{row_index}:E{row_index}', [update_data])
-                    updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    worksheet.update(f'G{row_index}', updated_at)
-
-        return True
+    async def create_sub(self, sub: Subscriptions):
+        try:
+            self.session.add(sub)
+            return True
+        except SQLAlchemyError as e:
+            print(f"Error creating subscription: {e}")
+            return False
