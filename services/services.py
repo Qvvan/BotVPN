@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 
 from database.context_manager import DatabaseContextManager
@@ -8,35 +7,36 @@ from models.models import Transactions, Subscriptions, VPNKeys
 
 
 async def process_successful_payment(message):
-    await refund_payment(message)
     await message.answer(text="Спасибо за покупку!")
 
     async with DatabaseContextManager() as session_methods:
         try:
             logger.info("Transaction started for adding user and service.")
 
-            # Создание транзакции
             transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
-            # Получение ключа VPN
+            if not transaction_state:
+                raise Exception("Ошибка сохранения транзакции")
+
             vpn_key = await session_methods.vpn_keys.get_vpn_key()
-            if vpn_key:
-                if transaction_state:
-                    await update_vpn_key(vpn_key.vpn_key_id, session_methods)
-                    subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
-                    if subscription_created:
-                        await send_success_response(message, vpn_key.key)
-                        await session_methods.session.commit()
-                    else:
-                        raise Exception("Ошибка создания подписки")
-                else:
-                    raise Exception("Ошибка сохранения транзакции")
-            else:
+            if not vpn_key:
                 raise Exception("Нет доступных ключей")
 
+            await update_vpn_key(vpn_key.vpn_key_id, session_methods)
+            subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
+            if not subscription_created:
+                raise Exception("Ошибка создания подписки")
+
+            await send_success_response(message, vpn_key.key)
+            await refund_payment(message)
+            await session_methods.session.commit()
+
         except Exception as e:
-            await session_methods.session.rollback()
             logger.error(f"Error during transaction processing: {e}")
             await message.answer(text=f"К сожалению, покупка отменена:\n {e}")
+            await refund_payment(message)
+
+            await session_methods.session.rollback()
+
             await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
             await session_methods.session.commit()
 

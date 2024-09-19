@@ -7,7 +7,8 @@ from aiogram.enums import ParseMode
 
 from config_data.config import load_config, Config
 from database.init_db import DataBase
-from handlers import user_handlers, kb_handlers, invoice_handlers
+from handlers import user_handlers, kb_handlers, invoice_handlers, admin_handlers
+from keyboards.set_menu import set_main_menu
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,10 @@ async def main():
         token=config.tg_bot.token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
+
     dp = Dispatcher()
+
+    await set_main_menu(bot)
 
     dp.include_router(user_handlers.router)
     dp.include_router(kb_handlers.router)
@@ -36,6 +40,7 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
+
 
 
 if __name__ == "__main__":

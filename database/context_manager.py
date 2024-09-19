@@ -14,6 +14,4 @@ class DatabaseContextManager:
         return self.methods
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if exc_type:
-            await self.session.rollback()
         await self.session.close()

@@ -49,3 +49,20 @@ class InlineKeyboards:
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
 
         return keyboard.as_markup()
+
+    @staticmethod
+    async def get_support() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        support_user_id = "123456789"  # Замените на реальный Telegram ID
+        support_link = f"t.me/{support_user_id}"
+
+        # Создание кнопки со ссылкой на пользователя
+        support_button = InlineKeyboardButton(
+            text="Связаться с поддержкой 🛠️",
+            url=support_link
+        )
+
+        keyboard.add(support_button)
+        return keyboard.as_markup()
+

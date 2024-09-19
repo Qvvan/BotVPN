@@ -9,7 +9,7 @@ class UserMethods:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def user_exists(self, tg_id: str) -> bool:
+    async def user_exists(self, tg_id: int) -> bool:
         try:
             result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
             user = result.scalars().first()

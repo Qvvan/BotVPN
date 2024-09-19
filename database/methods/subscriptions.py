@@ -4,29 +4,37 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models.models import Subscriptions
+from models.models import Subscriptions, VPNKeys, Services
 
 
 class SubscriptionMethods:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_subscription(self, tg_id):
+    async def get_subscription(self, user_id):
         try:
-            result = await self.session.execute(select(Subscriptions).filter_by(tg_id=tg_id))
-            subscription = result.scalars().first()
-            return subscription is not None
+            # Запрос с правильными join
+            query = (
+                select(
+                    Subscriptions.start_date,
+                    Subscriptions.end_date,
+                    VPNKeys.key,
+                    Services.name
+                ).select_from(Subscriptions)
+                .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)
+                .join(Services, Subscriptions.service_id == Services.service_id)
+                .filter(Subscriptions.user_id == user_id)
+            )
+
+            result = await self.session.execute(query)
+            subscription = result.fetchall()  # Получаем первую (и, надеюсь, единственную) запись
+            if len(subscription) == 0:
+                return None
+
+            return subscription
         except SQLAlchemyError as e:
             print(f"Error retrieving subscription: {e}")
-            return False
-
-    async def create_sub(self, sub: Subscriptions):
-        try:
-            self.session.add(sub)
-            return True
-        except SQLAlchemyError as e:
-            print(f"Error creating subscription: {e}")
-            return False
+            return None
 
     async def update_sub(self, sub: Subscriptions):
         try:
@@ -47,4 +55,12 @@ class SubscriptionMethods:
             return True
         except SQLAlchemyError as e:
             print(f"Error updating subscription: {e}")
+            return False
+
+    async def create_sub(self, sub: Subscriptions):
+        try:
+            self.session.add(sub)
+            return True
+        except SQLAlchemyError as e:
+            print(f"Error creating subscription: {e}")
             return False
