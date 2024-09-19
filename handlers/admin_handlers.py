@@ -3,13 +3,16 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from database.context_manager import DatabaseContextManager
+from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
+from lexicon.lexicon_ru import LEXICON_COMMANDS_ADMIN
 from state.state import AddKeyStates, AnotherFeatureStates
+from config_data.config import ADMIN_IDS
 
 router = Router()
 
 
-@router.message(Command(commands="add_key"))
+@router.message(Command(commands="add_key"), IsAdmin(ADMIN_IDS))
 async def add_key_command(message: types.Message, state: FSMContext):
     await message.answer(
         text="Введите новый VPN ключ",
@@ -60,3 +63,12 @@ async def finish_another_feature(message: types.Message, state: FSMContext):
     # Логика завершения обработки
     await message.answer("Обработка завершена.")
     await state.clear()
+
+
+@router.message(Command(commands='help'), IsAdmin(ADMIN_IDS))
+async def show_commands(message: types.Message):
+    ans = ''
+    for command, description in LEXICON_COMMANDS_ADMIN.items():
+        ans += f'{command}: {description}\n'
+    await message.answer(ans)
+
