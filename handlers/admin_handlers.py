@@ -18,9 +18,9 @@ async def add_key_command(message: types.Message, state: FSMContext):
     """Вывод клавиатуры для выбора сервера."""
     await message.answer(
         text="Выберите сервер для создания нового VPN ключа:",
-        reply_markup=await InlineKeyboards.server_selection_keyboards()  # Показываем клавиатуру с серверами
+        reply_markup=await InlineKeyboards.server_selection_keyboards()
     )
-    await state.set_state(AddKeyStates.waiting_for_server)  # Устанавливаем состояние ожидания выбора сервера
+    await state.set_state(AddKeyStates.waiting_for_server)
 
 
 @router.callback_query(lambda call: call.data.startswith("select_server:"))
@@ -29,12 +29,11 @@ async def server_selected(call: types.CallbackQuery, state: FSMContext):
     manager = OutlineManager()  # Инициализируем менеджер Outline
     server_id = call.data.split(":")[1]  # Получаем ID сервера из callback data
 
-    # Получаем имя сервера
     server_name = manager.list_servers().get(server_id)
 
     async with DatabaseContextManager() as session_methods:
         try:
-            outline_key = manager.create_key(server_id=server_id)  # Генерация ключа в Outline
+            outline_key = manager.create_key(server_id=server_id)
 
             await session_methods.vpn_keys.add_vpn_key(outline_key.access_url, server_name)
             await session_methods.session.commit()

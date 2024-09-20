@@ -1,6 +1,6 @@
 from outline_vpn.outline_vpn import OutlineVPN
 
-from outline.config_outline.config import SERVERS
+from outline.config_outline.secret import SERVERS
 
 
 class OutlineManager:

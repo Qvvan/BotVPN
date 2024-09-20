@@ -1,8 +1,8 @@
-"""update model vpn_key
+"""just updates
 
-Revision ID: 209a2378bdd2
-Revises: a22a4a024793
-Create Date: 2024-09-20 14:37:32.540693
+Revision ID: 11a8f17b1592
+Revises: 
+Create Date: 2024-09-20 19:48:36.034896
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '209a2378bdd2'
-down_revision: Union[str, None] = 'a22a4a024793'
+revision: str = '11a8f17b1592'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
