@@ -1,4 +1,4 @@
-from database.methods import vpn_keys, users, transactions, subscriptions, services, admins
+from database.methods import vpn_keys, users, transactions, subscriptions, services
 
 
 class MethodsManager:
@@ -10,5 +10,3 @@ class MethodsManager:
         self.transactions = transactions.TransactionMethods(self.session)
         self.subscription = subscriptions.SubscriptionMethods(self.session)
         self.services = services.ServiceMethods(self.session)
-        self.admins = admins.AdminMethods(self.session)
-

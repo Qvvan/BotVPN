@@ -25,7 +25,11 @@ async def process_start_command(message: Message):
 
 @router.message(Command(commands='createorder'))
 async def create_order(message: Message):
-    await message.answer(text=LEXICON_RU['createorder'], reply_markup=await InlineKeyboards.create_order_keyboards())
+    await message.answer(
+        text=LEXICON_RU['createorder'],
+        reply_markup=await InlineKeyboards.create_order_keyboards(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
 
 
 @router.message(Command(commands='subs'))
@@ -35,18 +39,23 @@ async def get_user_subs(message: Message):
         subscription_data = await session.subscription.get_subscription(user_id)
         if subscription_data is None:
             await message.answer(text=LEXICON_RU['not_exists'])
+            return
         for data in subscription_data:
             start_date, end_date, vpn_key, service_name = data
 
             parseSubs = (
-                f"💼 **Услуга**: {service_name}\n\n"
-                f"📆 **Дата начала**: {start_date.strftime('%Y-%m-%d')}\n"
-                f"📆 **Дата окончания**: {end_date.strftime('%Y-%m-%d')}\n\n"
-                f"🔑 **Ключ**: {vpn_key}"
+                f"💼 Услуга: {service_name}\n\n"
+                f"📆 Дата начала: {start_date.strftime('%Y-%m-%d')}\n"
+                f"📆 Дата окончания: {end_date.strftime('%Y-%m-%d')}\n\n"
+                f"🔑 Ключ: {vpn_key}"
             )
 
-            await message.answer(text=parseSubs, parse_mode=ParseMode.MARKDOWN)
+            await message.answer(text=parseSubs)
+
 
 @router.message(Command(commands='support'))
 async def get_support(message: Message):
-    await message.answer(text=LEXICON_RU['support'], reply_markup=await InlineKeyboards.get_support(), parse_mode=ParseMode.MARKDOWN)
+    await message.answer(
+        text=LEXICON_RU['support'],
+        reply_markup=await InlineKeyboards.get_support(),
+    )

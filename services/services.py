@@ -27,12 +27,11 @@ async def process_successful_payment(message):
                 raise Exception("Ошибка создания подписки")
 
             await send_success_response(message, vpn_key.key)
-            await refund_payment(message)
             await session_methods.session.commit()
 
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
-            await message.answer(text=f"К сожалению, покупка отменена:\n {e}")
+            await message.answer(text=f"К сожалению, покупка отменена:\n{e}")
             await refund_payment(message)
 
             await session_methods.session.rollback()

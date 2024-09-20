@@ -5,7 +5,6 @@ from models.models import Base
 
 env = Env()
 
-
 class DataBase:
     def __init__(self):
         self.host = env.str('DB_HOST')

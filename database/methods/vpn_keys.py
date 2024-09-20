@@ -49,3 +49,14 @@ class VPNKeyMethods:
             ))
         except Exception as err:
             return 'Не удалось добавить ключ', err
+
+    async def get_keys(self):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(is_active=0, is_blocked=0)
+            )
+            vpn_key = result.scalars().all()
+            return vpn_key
+        except SQLAlchemyError as e:
+            print(f"Error retrieving VPN key: {e}")
+            return None

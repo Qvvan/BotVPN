@@ -66,3 +66,11 @@ class InlineKeyboards:
         keyboard.add(support_button)
         return keyboard.as_markup()
 
+
+    @staticmethod
+    async def cancel() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
+        return keyboard.as_markup()
+
+

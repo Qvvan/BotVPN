@@ -5,6 +5,9 @@ from environs import Env
 
 logger = logging.getLogger(__name__)
 
+env = Env()
+env.read_env()
+
 
 @dataclass
 class TgBot:
@@ -32,9 +35,11 @@ class Config:
     database: DatabaseConfig
 
 
+ADMIN_IDS = [int(admin) for admin in env.list('ADMIN_IDS')]
+
+
 def load_config(path: str | None = None) -> Config:
     """Загрузить конфигурацию из файла .env и вернуть объект Config."""
-    env = Env()
     try:
         env.read_env(path)
         config = Config(
