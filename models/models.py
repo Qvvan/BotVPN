@@ -29,6 +29,7 @@ class VPNKeys(Base):
 
     vpn_key_id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String, unique=True, nullable=False)
+    server_name = Column(String, nullable=False)
     issued_at = Column(DateTime, default=None)
     is_active = Column(Integer, default=False)
     is_blocked = Column(Integer, default=False)

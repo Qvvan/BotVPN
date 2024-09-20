@@ -4,6 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.db_methods import MethodsManager
 from database.init_db import DataBase
+from outline.outline_manager.outline_manager import OutlineManager
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
@@ -73,4 +74,15 @@ class InlineKeyboards:
         keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
         return keyboard.as_markup()
 
+    @staticmethod
+    async def server_selection_keyboards() -> InlineKeyboardMarkup:
+        """Клавиатура для выбора серверов."""
+        keyboard = InlineKeyboardBuilder()
+        manager = OutlineManager()
+        servers = manager.list_servers()
 
+        for server_id, server_name in servers.items():
+            callback_data = f"select_server:{server_id}"
+            keyboard.add(InlineKeyboardButton(text=server_name, callback_data=callback_data))
+
+        return keyboard.as_markup()

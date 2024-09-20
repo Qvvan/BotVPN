@@ -2,6 +2,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class AddKeyStates(StatesGroup):
+    waiting_for_server = State()
     waiting_for_key = State()
 
 

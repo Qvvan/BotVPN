@@ -7,6 +7,7 @@ from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_COMMANDS_ADMIN, LEXICON_RU
+from outline.outline_manager.outline_manager import OutlineManager
 from state.state import AddKeyStates, CancelTransaction
 
 router = Router()
@@ -14,23 +15,33 @@ router = Router()
 
 @router.message(Command(commands="add_key"), IsAdmin(ADMIN_IDS))
 async def add_key_command(message: types.Message, state: FSMContext):
+    """Вывод клавиатуры для выбора сервера."""
     await message.answer(
-        text="Введите новый VPN ключ",
-        reply_markup=await InlineKeyboards.cancel()
+        text="Выберите сервер для создания нового VPN ключа:",
+        reply_markup=await InlineKeyboards.server_selection_keyboards()  # Показываем клавиатуру с серверами
     )
-    await state.set_state(AddKeyStates.waiting_for_key)
+    await state.set_state(AddKeyStates.waiting_for_server)  # Устанавливаем состояние ожидания выбора сервера
 
 
-@router.message(AddKeyStates.waiting_for_key)
-async def process_key(message: types.Message, state: FSMContext):
-    key = message.text
+@router.callback_query(lambda call: call.data.startswith("select_server:"))
+async def server_selected(call: types.CallbackQuery, state: FSMContext):
+    """Обрабатываем выбор сервера и создаем ключ."""
+    manager = OutlineManager()  # Инициализируем менеджер Outline
+    server_id = call.data.split(":")[1]  # Получаем ID сервера из callback data
+
+    # Получаем имя сервера
+    server_name = manager.list_servers().get(server_id)
+
     async with DatabaseContextManager() as session_methods:
         try:
-            await session_methods.vpn_keys.add_vpn_key(key)
-            await message.answer(f"Ключ {key} успешно добавлен!")
+            outline_key = manager.create_key(server_id=server_id)  # Генерация ключа в Outline
+
+            await session_methods.vpn_keys.add_vpn_key(outline_key.access_url, server_name)
             await session_methods.session.commit()
+
+            await call.message.answer(f"Ключ: \n{outline_key.access_url} \nУспешно создан и добавлен на сервер: {server_name}!")
         except Exception as e:
-            await message.answer(f'Не удалось добавить ключ, ошибка:\n{e}')
+            await call.message.answer(f'Не удалось создать ключ, ошибка:\n{e}')
         await state.clear()
 
 
@@ -48,7 +59,8 @@ async def process_another_input(message: types.Message, state: FSMContext):
     transaction_code = message.text
     async with DatabaseContextManager() as session_methods:
         try:
-            user_id, decrypted_transaction_code = await session_methods.transactions.cancel_transaction(transaction_code)
+            user_id, decrypted_transaction_code = await session_methods.transactions.cancel_transaction(
+                transaction_code)
             if user_id and decrypted_transaction_code:
                 try:
                     await message.bot.refund_star_payment(user_id, decrypted_transaction_code)
