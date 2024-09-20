@@ -45,8 +45,8 @@ class TransactionMethods:
             transaction = result.scalars().first()
 
             if transaction:
-                tg_id = transaction.user_id
-                return tg_id, decrypted_transaction_id
+                user_id = transaction.user_id
+                return user_id, decrypted_transaction_id
             return None, None
         except SQLAlchemyError as e:
             print(f"Error canceling transaction: {e}")

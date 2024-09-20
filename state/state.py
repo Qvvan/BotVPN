@@ -5,6 +5,6 @@ class AddKeyStates(StatesGroup):
     waiting_for_key = State()
 
 
-class AnotherFeatureStates(StatesGroup):
-    waiting_for_input = State()
+class CancelTransaction(StatesGroup):
+    waiting_for_transaction = State()
     processing = State()
