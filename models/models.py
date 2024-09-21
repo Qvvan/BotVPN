@@ -28,6 +28,7 @@ class VPNKeys(Base):
     __tablename__ = 'vpn_keys'
 
     vpn_key_id = Column(Integer, primary_key=True, autoincrement=True)
+    outline_key_id = Column(String)
     key = Column(String, unique=True, nullable=False)
     server_name = Column(String, nullable=False)
     issued_at = Column(DateTime, default=None)

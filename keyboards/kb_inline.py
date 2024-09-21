@@ -2,6 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from database.context_manager import DatabaseContextManager
 from database.db_methods import MethodsManager
 from database.init_db import DataBase
 from outline.outline_manager.outline_manager import OutlineManager
@@ -12,11 +13,12 @@ class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_price: str
     service_name: str
     duration_days: str
+    server_id: str
 
 
 class InlineKeyboards:
     @staticmethod
-    async def create_order_keyboards() -> InlineKeyboardMarkup:
+    async def create_order_keyboards(server_id) -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
         db = DataBase()
         async with db.Session() as session:
@@ -37,10 +39,16 @@ class InlineKeyboards:
                     service_price=service_price,
                     service_name=service_name,
                     duration_days=duration_days,
+                    server_id=server_id
                 ).pack()
 
                 buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
-            keyboard.row(*buttons, width=len(buttons))
+            keyboard.row(*buttons)
+
+            keyboard.row(
+                InlineKeyboardButton(text='Назад', callback_data='back_to_servers'),
+                InlineKeyboardButton(text='Отмена', callback_data='cancel')
+            )
 
             return keyboard.as_markup()
 
@@ -80,9 +88,22 @@ class InlineKeyboards:
         keyboard = InlineKeyboardBuilder()
         manager = OutlineManager()
         servers = manager.list_servers()
+        async with DatabaseContextManager() as session_methods:
+            try:
+                keys = await session_methods.vpn_keys.get_keys()
+            except Exception as e:
+                raise f'Ошибка при получение ключей\n{e}'
+        count_server_keys = {}
+        for obj in keys:
+            if obj.server_name not in count_server_keys:
+                count_server_keys[obj.server_name] = 0
+            count_server_keys[obj.server_name] += 1
 
         for server_id, server_name in servers.items():
             callback_data = f"select_server:{server_id}"
-            keyboard.add(InlineKeyboardButton(text=server_name, callback_data=callback_data))
+            n = count_server_keys[server_name] if server_name in count_server_keys else 0
+            keyboard.add(InlineKeyboardButton(text=f"{server_name}\nДоступно: {n} ключей", callback_data=callback_data))
+        keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='cancel'))
+        keyboard.adjust(1)
 
         return keyboard.as_markup()

@@ -29,3 +29,8 @@ class OutlineManager:
             return self.clients[server_id].delete_key(key_id)
         raise ValueError(f"Server ID {server_id} not found.")
 
+    def rename_key(self, server_id: str, key_id: str, new_key_name: str):
+        if server_id in self.clients:
+            return self.clients[server_id].rename_key(key_id, new_key_name)
+        raise ValueError(f"Server ID {server_id} not found.")
+

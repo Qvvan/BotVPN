@@ -8,4 +8,8 @@ class AddKeyStates(StatesGroup):
 
 class CancelTransaction(StatesGroup):
     waiting_for_transaction = State()
-    processing = State()
+
+
+class ChoiceServer(StatesGroup):
+    waiting_for_choice = State()
+    waiting_for_services = State()
