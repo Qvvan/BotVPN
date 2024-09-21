@@ -72,3 +72,21 @@ class Transactions(Base):
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Servers(Base):
+    __tablename__ = 'servers'
+
+    server_id = Column(Integer, primary_key=True, autoincrement=True)
+    api_url = Column(String, unique=True, nullable=False)
+    cert_sha256 = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Admins(Base):
+    __tablename__ = 'admins'
+
+    admin_id = Column(Integer, primary_key=True, autoincrement=True)
+    tg_id = Column(Integer, unique=True, index=True, nullable=False)
+    username = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

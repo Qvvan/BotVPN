@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -10,9 +9,9 @@ from config_data.config import ADMIN_IDS
 from config_data.config import load_config, Config
 from database.init_db import DataBase
 from handlers import user_handlers, kb_handlers, invoice_handlers, admin_handlers
+from handlers.admin import add_server, del_key
 from keyboards.set_menu import set_main_menu
-
-logger = logging.getLogger(__name__)
+from logger.logging_config import logger
 
 
 async def on_startup(bot: Bot):
@@ -34,11 +33,6 @@ async def on_shutdown(bot: Bot):
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(filename)s:%(lineno)d #%(levelname)-8s '
-               '[%(asctime)s] - %(name)s - %(message)s')
-
     logger.info('Starting bot')
 
     config: Config = load_config()
@@ -63,6 +57,8 @@ async def main():
     dp.include_router(kb_handlers.router)
     dp.include_router(invoice_handlers.router)
     dp.include_router(admin_handlers.router)
+    dp.include_router(add_server.router)
+    dp.include_router(del_key.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:

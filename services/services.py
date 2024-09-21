@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 
 from database.context_manager import DatabaseContextManager
@@ -14,7 +15,8 @@ async def process_successful_payment(message):
         try:
             logger.info("Transaction started for adding user and service.")
             manager = OutlineManager()
-            server_id = message.successful_payment.invoice_payload.split(':')[2]
+            await manager.wait_for_initialization()
+            server_id = int(message.successful_payment.invoice_payload.split(':')[2])
 
             transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
             if not transaction_state:
@@ -26,11 +28,13 @@ async def process_successful_payment(message):
 
             await update_vpn_key(vpn_key.vpn_key_id, session_methods)
             subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
+
             if not subscription_created:
                 raise Exception("Ошибка создания подписки")
 
+
+            await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
             await send_success_response(message, vpn_key.key)
-            manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
             await session_methods.session.commit()
 
         except Exception as e:
@@ -46,7 +50,6 @@ async def process_successful_payment(message):
 
 async def create_transaction(message, status, description: str, session_methods) -> Transactions:
     in_payload = message.successful_payment.invoice_payload.split(':')
-    print(in_payload)
 
     transaction_code = message.successful_payment.telegram_payment_charge_id
     service_id = int(in_payload[0])

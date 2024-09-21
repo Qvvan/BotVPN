@@ -63,7 +63,7 @@ class InlineKeyboards:
     async def get_support() -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
 
-        support_user_id = "123456789"  # Замените на реальный Telegram ID
+        support_user_id = "qvvan"
         support_link = f"t.me/{support_user_id}"
 
         # Создание кнопки со ссылкой на пользователя
@@ -74,7 +74,6 @@ class InlineKeyboards:
 
         keyboard.add(support_button)
         return keyboard.as_markup()
-
 
     @staticmethod
     async def cancel() -> InlineKeyboardMarkup:
@@ -87,12 +86,16 @@ class InlineKeyboards:
         """Клавиатура для выбора серверов."""
         keyboard = InlineKeyboardBuilder()
         manager = OutlineManager()
-        servers = manager.list_servers()
+        await manager.wait_for_initialization()
+        servers = await manager.list_servers()
+        print(servers)
+
         async with DatabaseContextManager() as session_methods:
             try:
                 keys = await session_methods.vpn_keys.get_keys()
             except Exception as e:
-                raise f'Ошибка при получение ключей\n{e}'
+                raise Exception(f'Ошибка при получении ключей: {e}')
+
         count_server_keys = {}
         for obj in keys:
             if obj.server_name not in count_server_keys:
@@ -100,9 +103,10 @@ class InlineKeyboards:
             count_server_keys[obj.server_name] += 1
 
         for server_id, server_name in servers.items():
-            callback_data = f"select_server:{server_id}"
-            n = count_server_keys[server_name] if server_name in count_server_keys else 0
+            n = count_server_keys.get(server_name, 0)
+            callback_data = f"select_server:{server_id}:{n}"
             keyboard.add(InlineKeyboardButton(text=f"{server_name}\nДоступно: {n} ключей", callback_data=callback_data))
+
         keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='cancel'))
         keyboard.adjust(1)
 

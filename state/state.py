@@ -13,3 +13,12 @@ class CancelTransaction(StatesGroup):
 class ChoiceServer(StatesGroup):
     waiting_for_choice = State()
     waiting_for_services = State()
+
+
+class AddAdmin(StatesGroup):
+    waiting_apiUrl = State()
+    waiting_certSha256 = State()
+
+
+class DeleteKey(StatesGroup):
+    waiting_key_code = State()

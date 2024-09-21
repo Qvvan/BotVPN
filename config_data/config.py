@@ -1,9 +1,7 @@
-import logging
+from logger.logging_config import logger
 from dataclasses import dataclass
 
 from environs import Env
-
-logger = logging.getLogger(__name__)
 
 env = Env()
 env.read_env()

@@ -2,12 +2,10 @@ from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from database.context_manager import DatabaseContextManager
 from handlers.invoice_handlers import send_invoice_handler
 from handlers.user_handlers import create_order
 from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
-from outline.outline_manager.outline_manager import OutlineManager
 from state.state import ChoiceServer
 
 router = Router()
@@ -34,17 +32,26 @@ async def handle_service_callback(callback_query: CallbackQuery, state: FSMConte
                                server_id=server_id
                                )
 
+
 @router.callback_query(lambda c: c.data.startswith("select_server:"), ChoiceServer.waiting_for_choice)
 async def server_selected(callback_query: types.CallbackQuery, state: FSMContext):
     """Обрабатываем выбор сервера и создаем ключ."""
     callback_data = callback_query.data.split(':')
     server_id = callback_data[1]
+    count_key = int(callback_data[2])
+    if count_key == 0:
+        await callback_query.answer(
+            text='К сожалению, на данном сервере нет доступных ключей.\n'
+                 'Пожалуйста, выбери другой сервер или обратись в техподдержку для получения помощи.',
+            show_alert=True  # This will display it as a notification
+        )
+        return
+    await callback_query.message.delete()
+
     await callback_query.message.answer(
         text=LEXICON_RU['createorder'],
         reply_markup=await InlineKeyboards.create_order_keyboards(server_id)
     )
-
-    await callback_query.message.delete()
 
     await state.set_state(ChoiceServer.waiting_for_services)
 
