@@ -7,7 +7,7 @@ from services.services import process_successful_payment
 router = Router()
 
 
-async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id, duration_days: str):
+async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id, duration_days: str, server_id: str):
     prices = [LabeledPrice(label="XTR", amount=price_service)]
     await message.answer_invoice(
         title=f"VPN на {service_name}",
@@ -15,7 +15,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
                     f"⬇️ После успешной оплаты, тебе будут высланы данные и инструкция для подключения VPN. 😎",
         prices=prices,
         provider_token="",
-        payload=f"{service_id}:{duration_days}",
+        payload=f"{service_id}:{duration_days}:{server_id}",
         currency="XTR",
         reply_markup=await InlineKeyboards.create_pay(price_service),
     )

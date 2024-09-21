@@ -19,6 +19,7 @@ class SubscriptionMethods:
                     Subscriptions.start_date,
                     Subscriptions.end_date,
                     VPNKeys.key,
+                    VPNKeys.server_name,
                     Services.name
                 ).select_from(Subscriptions)
                 .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)

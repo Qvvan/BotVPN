@@ -42,10 +42,12 @@ class VPNKeyMethods:
             print(f"Error retrieving VPN key: {e}")
             return None
 
-    async def add_vpn_key(self, key: str):
+    async def add_vpn_key(self, key: str, server_name: str, outline_key_id: str):
         try:
             self.session.add(VPNKeys(
                 key=key,
+                server_name=server_name,
+                outline_key_id=outline_key_id,
             ))
         except Exception as err:
             return 'Не удалось добавить ключ', err
