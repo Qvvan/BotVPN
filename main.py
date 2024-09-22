@@ -12,6 +12,7 @@ from handlers import user_handlers, kb_handlers, invoice_handlers, admin_handler
 from handlers.admin import add_server, del_key
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
+from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
 
 
 async def on_startup(bot: Bot):
@@ -49,6 +50,9 @@ async def main():
     dp = Dispatcher(storage=storage)
 
     await set_main_menu(bot)
+
+    dp.message.outer_middleware(MessageLoggingMiddleware())
+    dp.callback_query.outer_middleware(CallbackLoggingMiddleware())
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
