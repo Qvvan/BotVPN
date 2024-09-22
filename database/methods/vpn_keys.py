@@ -3,6 +3,8 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from logger.logging_config import logger
+
 
 from models.models import VPNKeys
 
@@ -62,3 +64,23 @@ class VPNKeyMethods:
         except SQLAlchemyError as e:
             print(f"Error retrieving VPN key: {e}")
             return None
+
+    async def del_key(self, key_code: str):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(key=key_code)
+            )
+            vpn_key = result.scalar_one_or_none()
+
+            if vpn_key is None:
+                raise
+
+            await self.session.delete(vpn_key)
+            await self.session.commit()
+
+            return True
+
+        except SQLAlchemyError as e:
+            logger.error('Не удалось удалить ключ', e)
+            raise
+

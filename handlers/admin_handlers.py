@@ -26,20 +26,27 @@ async def add_key_command(message: types.Message, state: FSMContext):
 @router.callback_query(lambda c: c.data.startswith("select_server:"), AddKeyStates.waiting_for_server)
 async def server_selected(call: types.CallbackQuery, state: FSMContext):
     """Обрабатываем выбор сервера и создаем ключ."""
-    manager = OutlineManager()
-    server_id = call.data.split(":")[1]
+    manager = OutlineManager()  # Инициализация менеджера
+    await manager.wait_for_initialization()
+    server_id = int(call.data.split(":")[1])
 
-    server_name = manager.list_servers().get(server_id)
+    servers = await manager.list_servers()
+    server_name = servers.get(server_id)
+
+    if server_name is None:
+        await call.message.answer("Сервер не найден.")
+        return
 
     async with DatabaseContextManager() as session_methods:
         try:
-            outline_key = manager.create_key(server_id=server_id)
+            outline_key = await manager.create_key(server_id=server_id)
 
             await session_methods.vpn_keys.add_vpn_key(outline_key.access_url, server_name, outline_key.key_id)
             await session_methods.session.commit()
 
             await call.message.answer(
-                f"Ключ: \n{outline_key.access_url} \nУспешно создан и добавлен на сервер: {server_name}")
+                f"Ключ: \n{outline_key.access_url} \nУспешно создан и добавлен на сервер: {server_name}"
+            )
         except Exception as e:
             await call.message.answer(f'Не удалось создать ключ, ошибка:\n{e}')
 
@@ -90,7 +97,3 @@ async def cancel_callback(callback_query: types.CallbackQuery, state: FSMContext
     await callback_query.message.delete()
 
     await state.clear()
-
-@router.message(Command(commands='add_server'), IsAdmin(ADMIN_IDS))
-async def show_commands(message: types.Message):
-    await message.answer('Здесь можно будет добавить сервер, но это потом')
