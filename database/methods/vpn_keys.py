@@ -92,10 +92,8 @@ class VPNKeyMethods:
                 select(VPNKeys).filter_by(key=key_code)
             )
             vpn_key = result.scalar_one_or_none()
-
             if not vpn_key:
-                return {"message": "Ключ не найден"}
-
+                raise Exception('Ключ не найден')
             # Если ключ используется (is_active = 1)
             if vpn_key.is_active == 1:
                 # Получаем информацию о подписке
@@ -106,9 +104,8 @@ class VPNKeyMethods:
                 subscription = subscription_result.scalar_one_or_none()
 
                 if subscription:
-                    # Получаем информацию о пользователе и сервисе
                     user_result = await self.session.execute(
-                        select(Users).filter_by(user_id=subscription.user_id)
+                        select(Users).filter_by(tg_id=subscription.user_id)
                     )
                     user = user_result.scalar_one_or_none()
 
