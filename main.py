@@ -9,7 +9,7 @@ from config_data.config import ADMIN_IDS
 from config_data.config import load_config, Config
 from database.init_db import DataBase
 from handlers import user_handlers, kb_handlers, invoice_handlers, admin_handlers
-from handlers.admin import add_server, del_key
+from handlers.admin import add_server, del_key, key_info
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
 from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
@@ -63,6 +63,7 @@ async def main():
     dp.include_router(admin_handlers.router)
     dp.include_router(add_server.router)
     dp.include_router(del_key.router)
+    dp.include_router(key_info.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:

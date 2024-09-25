@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from logger.logging_config import logger
 
 
-from models.models import VPNKeys
+from models.models import VPNKeys, Subscriptions, Users, Services
 
 
 class VPNKeyMethods:
@@ -82,5 +82,53 @@ class VPNKeyMethods:
 
         except SQLAlchemyError as e:
             logger.error('Не удалось удалить ключ', e)
+            raise
+
+
+    async def key_info(self, key_code: str):
+        try:
+            # Проверяем, существует ли ключ
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(key=key_code)
+            )
+            vpn_key = result.scalar_one_or_none()
+            if not vpn_key:
+                raise Exception('Ключ не найден')
+            # Если ключ используется (is_active = 1)
+            if vpn_key.is_active == 1:
+                # Получаем информацию о подписке
+                subscription_result = await self.session.execute(
+                    select(Subscriptions)
+                    .filter_by(vpn_key_id=vpn_key.vpn_key_id)
+                )
+                subscription = subscription_result.scalar_one_or_none()
+
+                if subscription:
+                    user_result = await self.session.execute(
+                        select(Users).filter_by(tg_id=subscription.user_id)
+                    )
+                    user = user_result.scalar_one_or_none()
+
+                    service_result = await self.session.execute(
+                        select(Services).filter_by(service_id=subscription.service_id)
+                    )
+                    service = service_result.scalar_one_or_none()
+
+                    if user and service:
+                        return {
+                            "message": "Ключ используется",
+                            "user_id": user.tg_id,
+                            "username": user.username,
+                            "start_date": subscription.start_date,
+                            "end_date": subscription.end_date,
+                            "last_update": vpn_key.updated_at,
+                            "service_name": service.name
+                        }
+
+            # Если ключ не активен (is_active = 0)
+            return {"message": "Ключем никто не пользуется"}
+
+        except SQLAlchemyError as e:
+            logger.error('Ошибка при получении информации о ключе', e)
             raise
 
