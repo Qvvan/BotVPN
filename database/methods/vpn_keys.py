@@ -21,7 +21,6 @@ class VPNKeyMethods:
             if existing_key:
                 existing_key.issued_at = vpnkey.issued_at
                 existing_key.is_active = vpnkey.is_active
-                existing_key.is_blocked = vpnkey.is_blocked
                 existing_key.issued_at = datetime.now()
                 existing_key.updated_at = datetime.now()
 
@@ -36,7 +35,7 @@ class VPNKeyMethods:
     async def get_vpn_key(self):
         try:
             result = await self.session.execute(
-                select(VPNKeys).filter_by(is_active=0, is_blocked=0)
+                select(VPNKeys).filter_by(is_active=0)
             )
             vpn_key = result.scalars().first()
             return vpn_key
@@ -44,9 +43,10 @@ class VPNKeyMethods:
             print(f"Error retrieving VPN key: {e}")
             return None
 
-    async def add_vpn_key(self, key: str, server_name: str, outline_key_id: str):
+    async def add_vpn_key(self, key: str, server_name: str, outline_key_id: str, server_id: str):
         try:
             self.session.add(VPNKeys(
+                server_id=server_id,
                 key=key,
                 server_name=server_name,
                 outline_key_id=outline_key_id,
@@ -57,7 +57,7 @@ class VPNKeyMethods:
     async def get_keys(self):
         try:
             result = await self.session.execute(
-                select(VPNKeys).filter_by(is_active=0, is_blocked=0)
+                select(VPNKeys).filter_by(is_active=0)
             )
             vpn_key = result.scalars().all()
             return vpn_key
@@ -130,5 +130,22 @@ class VPNKeyMethods:
 
         except SQLAlchemyError as e:
             logger.error('Ошибка при получении информации о ключе', e)
+            raise
+
+
+    async def get_key_id(self, key_code: str):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(key=key_code)
+            )
+            vpn_key = result.scalar_one_or_none()
+
+            if vpn_key is None:
+                return False
+
+            return vpn_key
+
+        except SQLAlchemyError as e:
+            logger.error('Не удалось удалить ключ', e)
             raise
 

@@ -54,7 +54,7 @@ class OutlineManager:
                 return server_id
         return None
 
-    async def create_key(self, server_id: int):
+    async def create_key(self, server_id: str):
         if server_id in self.clients:
             return self.clients[server_id].create_key(name='Свободый')
         raise ValueError(f"Server ID {server_id} not found.")

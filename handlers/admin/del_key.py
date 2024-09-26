@@ -1,7 +1,6 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from outline_vpn.outline_vpn import OutlineVPN
 
 from config_data.config import ADMIN_IDS
 from database.context_manager import DatabaseContextManager
@@ -21,11 +20,17 @@ async def show_commands(message: types.Message, state: FSMContext):
 @router.message(DeleteKey.waiting_key_code)
 async def process_api_url(message: types.Message, state: FSMContext):
     vpn_code = message.text
-    # manager = OutlineManager()
+    manager = OutlineManager()
+    await manager.wait_for_initialization()
     async with DatabaseContextManager() as session_methods:
         try:
-            await session_methods.vpn_keys.del_key(vpn_code)
-            await message.answer('Ключ успешно удален')
+            vpn_key_info = await session_methods.vpn_keys.get_key_id(vpn_code)
+            if not vpn_key_info:
+                await message.answer('Такого ключа не существует')
+            else:
+                await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
+                await session_methods.vpn_keys.del_key(vpn_code)
+                await message.answer('Ключ успешно удален')
         except Exception as e:
             await message.answer(text=f'Не удалось удалить ключ:\n{e}')
 

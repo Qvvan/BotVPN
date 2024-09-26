@@ -26,11 +26,18 @@ class ServerMethods:
         Добавляет сервер в базу данных, если его еще нет.
         """
         try:
+            server_id = server_data.get("SERVER_ID")
+            name = server_data.get("NAME")
             api_url = server_data.get("API_URL")
             cert_sha256 = server_data.get("CERT_SHA256")
 
             if not await self.server_exists(api_url):
-                new_server = Servers(api_url=api_url, cert_sha256=cert_sha256)
+                new_server = Servers(
+                    server_id=server_id,
+                    name=name,
+                    api_url=api_url,
+                    cert_sha256=cert_sha256
+                )
                 self.session.add(new_server)
 
                 await self.session.commit()

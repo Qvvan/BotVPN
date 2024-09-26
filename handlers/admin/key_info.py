@@ -9,10 +9,12 @@ from state.state import KeyInfo
 
 router = Router()
 
+
 @router.message(Command(commands='key_info'), IsAdmin(ADMIN_IDS))
 async def show_commands(message: types.Message, state: FSMContext):
     await message.answer(text='Отправьте ключ, для получения полной информации')
     await state.set_state(KeyInfo.waiting_key_info)
+
 
 @router.message(KeyInfo.waiting_key_info)
 async def key_info(message: types.Message, state: FSMContext):
