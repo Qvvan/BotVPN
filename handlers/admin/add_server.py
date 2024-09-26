@@ -30,15 +30,17 @@ async def process_cert_sha256(message: types.Message, state: FSMContext):
     certSha256 = message.text
     data = await state.get_data()
     apiUrl = data.get('apiUrl')
+    server_info = None
 
     try:
         client = OutlineVPN(api_url=apiUrl, cert_sha256=certSha256)
-        client.get_server_information()
+        server_info = client.get_server_information()
     except Exception as e:
         await message.answer(f"Ошибка при соединении с сервером:\n{e}")
         return
-
     SERVER = {
+        "SERVER_ID": server_info['serverId'],
+        "NAME": server_info['name'],
         "CERT_SHA256": certSha256,
         "API_URL": apiUrl,
     }

@@ -23,5 +23,6 @@ class AddAdmin(StatesGroup):
 class DeleteKey(StatesGroup):
     waiting_key_code = State()
 
+
 class KeyInfo(StatesGroup):
     waiting_key_info = State()

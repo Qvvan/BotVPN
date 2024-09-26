@@ -88,7 +88,6 @@ class InlineKeyboards:
         manager = OutlineManager()
         await manager.wait_for_initialization()
         servers = await manager.list_servers()
-        print(servers)
 
         async with DatabaseContextManager() as session_methods:
             try:

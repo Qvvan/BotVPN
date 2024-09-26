@@ -28,12 +28,12 @@ class VPNKeys(Base):
     __tablename__ = 'vpn_keys'
 
     vpn_key_id = Column(Integer, primary_key=True, autoincrement=True)
-    outline_key_id = Column(String)
+    outline_key_id = Column(String, nullable=False)
+    server_id = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
     server_name = Column(String, nullable=False)
     issued_at = Column(DateTime, default=None)
     is_active = Column(Integer, default=False)
-    is_blocked = Column(Integer, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -49,16 +49,6 @@ class Subscriptions(Base):
     end_date = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class Logs(Base):
-    __tablename__ = 'logs'
-
-    log_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
-    action = Column(String, nullable=False)
-    details = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Transactions(Base):
@@ -77,7 +67,8 @@ class Transactions(Base):
 class Servers(Base):
     __tablename__ = 'servers'
 
-    server_id = Column(Integer, primary_key=True, autoincrement=True)
+    server_id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
     api_url = Column(String, unique=True, nullable=False)
     cert_sha256 = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

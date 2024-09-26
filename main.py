@@ -8,8 +8,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config_data.config import ADMIN_IDS
 from config_data.config import load_config, Config
 from database.init_db import DataBase
-from handlers import user_handlers, kb_handlers, invoice_handlers, admin_handlers
-from handlers.admin import add_server, del_key, key_info
+from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel
+from handlers.user import createorder, subs, start, support
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
 from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
@@ -57,13 +57,21 @@ async def main():
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
-    dp.include_router(user_handlers.router)
-    dp.include_router(kb_handlers.router)
-    dp.include_router(invoice_handlers.router)
-    dp.include_router(admin_handlers.router)
+    # user-handlers
+    dp.include_router(createorder.router)
+    dp.include_router(subs.router)
+    dp.include_router(start.router)
+    dp.include_router(support.router)
+
+    # admin-handlers
+    dp.include_router(add_key.router)
     dp.include_router(add_server.router)
     dp.include_router(del_key.router)
+    dp.include_router(help_info.router)
     dp.include_router(key_info.router)
+    dp.include_router(refund.router)
+
+    dp.include_router(cancel.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:
