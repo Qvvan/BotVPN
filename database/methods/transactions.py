@@ -5,13 +5,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from config_data.config import CRYPTO_KEY
 from models.models import Transactions
 
 
 class TransactionMethods:
     def __init__(self, session: AsyncSession):
         self.session = session
-        crypto_key = 'jolYkWDzqQJ_CQLh2uR6_zBvd_zLV7hzZ8QzJAHrOvY='
+        crypto_key = CRYPTO_KEY
         self.cipher_suite = Fernet(crypto_key)
 
     async def add_transaction(self, transaction_code: str, service_id: int, user_id: int, status: str,

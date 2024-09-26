@@ -2,6 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from logger.logging_config import logger
 from models.models import Services
 
 
@@ -15,8 +16,24 @@ class ServiceMethods:
             services = result.scalars().all()
             return services
         except SQLAlchemyError as e:
-            print(f"Error retrieving services: {e}")
+            logger.error(f"Ошибка получение услуги: {e}")
             return []
+
+
+    async def get_service_by_id(self, service_id: int):
+        try:
+            result = await self.session.execute(
+                select(Services).filter_by(service_id=service_id)
+            )
+            service = result.scalar_one_or_none()
+
+            if service is None:
+                return False
+
+            return service
+        except Exception as e:
+            logger.error('Не удалось взять данную услугу', e)
+            raise
 
     async def add_service(self, name: str, duration_days: int, price: int):
         service = Services(
@@ -28,5 +45,5 @@ class ServiceMethods:
             self.session.add(service)
             return service
         except SQLAlchemyError as e:
-            print(f"Error adding service: {e}")
+            logger.error(f"Error adding service: {e}")
             return None

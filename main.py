@@ -5,8 +5,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from config_data.config import ADMIN_IDS
-from config_data.config import load_config, Config
+from config_data import config
 from database.init_db import DataBase
 from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel
 from handlers.user import createorder, subs, start, support
@@ -17,7 +16,7 @@ from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLogg
 
 async def on_startup(bot: Bot):
     """Оповещение администраторов о запуске бота."""
-    for admin_id in ADMIN_IDS:
+    for admin_id in config.ADMIN_IDS:
         try:
             await bot.send_message(admin_id, "Бот запущен.")
         except Exception as e:
@@ -26,7 +25,7 @@ async def on_startup(bot: Bot):
 
 async def on_shutdown(bot: Bot):
     """Оповещение администраторов о завершении работы бота."""
-    for admin_id in ADMIN_IDS:
+    for admin_id in config.ADMIN_IDS:
         try:
             await bot.send_message(admin_id, "Бот завершает работу.")
         except Exception as e:
@@ -36,14 +35,13 @@ async def on_shutdown(bot: Bot):
 async def main():
     logger.info('Starting bot')
 
-    config: Config = load_config()
     db = DataBase()
     await db.create_db()
 
     storage = MemoryStorage()
 
     bot = Bot(
-        token=config.tg_bot.token,
+        token=config.BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 

@@ -5,15 +5,17 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database.context_manager import DatabaseContextManager
 from database.db_methods import MethodsManager
 from database.init_db import DataBase
+from logger.logging_config import logger
 from outline.outline_manager.outline_manager import OutlineManager
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
-    service_price: str
-    service_name: str
-    duration_days: str
     server_id: str
+
+class ServerCallbackFactory(CallbackData, prefix='select_server'):
+    server_id: str
+    available_keys: int
 
 
 class InlineKeyboards:
@@ -31,14 +33,9 @@ class InlineKeyboards:
             for service in services:
                 service_id = str(service.service_id)
                 service_name = service.name
-                service_price = str(service.price)
-                duration_days = str(service.duration_days)
 
                 callback_data = ServiceCallbackFactory(
                     service_id=service_id,
-                    service_price=service_price,
-                    service_name=service_name,
-                    duration_days=duration_days,
                     server_id=server_id
                 ).pack()
 
@@ -93,7 +90,8 @@ class InlineKeyboards:
             try:
                 keys = await session_methods.vpn_keys.get_keys()
             except Exception as e:
-                raise Exception(f'Ошибка при получении ключей: {e}')
+                logger.error(f'Ошибка при получении ключей: {e}')
+                raise
 
         count_server_keys = {}
         for obj in keys:
