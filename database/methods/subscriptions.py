@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from logger.logging_config import logger
 from models.models import Subscriptions, VPNKeys, Services
 
 
@@ -28,18 +29,21 @@ class SubscriptionMethods:
             )
 
             result = await self.session.execute(query)
-            subscription = result.fetchall()  # Получаем первую (и, надеюсь, единственную) запись
+            subscription = result.fetchall()
             if len(subscription) == 0:
                 return None
 
             return subscription
         except SQLAlchemyError as e:
-            print(f"Error retrieving subscription: {e}")
+            logger.error(f"Error retrieving subscription: {e}")
             return None
 
     async def update_sub(self, sub: Subscriptions):
         try:
-            result = await self.session.execute(select(Subscriptions).filter_by(tg_id=sub.tg_id))
+            result = await self.session.execute(select(Subscriptions).filter_by(
+                user_id=sub.user_id,
+                vpn_key_id=sub.vpn_key_id,
+                ))
             existing_sub = result.scalars().first()
 
             if not existing_sub:
@@ -50,12 +54,13 @@ class SubscriptionMethods:
                 existing_sub.start_date = sub.start_date
                 existing_sub.end_date = sub.end_date
                 existing_sub.updated_at = datetime.now()
+                existing_sub.status = sub.status
 
                 self.session.add(existing_sub)
 
             return True
         except SQLAlchemyError as e:
-            print(f"Error updating subscription: {e}")
+            logger.error(f"Error updating subscription: {e}")
             return False
 
     async def create_sub(self, sub: Subscriptions):
@@ -63,5 +68,20 @@ class SubscriptionMethods:
             self.session.add(sub)
             return True
         except SQLAlchemyError as e:
-            print(f"Error creating subscription: {e}")
+            logger.error(f"Error creating subscription: {e}")
             return False
+
+    async def get_subs(self):
+        try:
+            result = await self.session.execute(
+                select(Subscriptions)
+            )
+            subs = result.scalars().all()
+            if len(subs) == 0:
+                logger.info('Нет ни одной подписки')
+                return False
+
+            return subs
+        except SQLAlchemyError as e:
+            logger.error('Не удалось получить подписки', e)
+            raise

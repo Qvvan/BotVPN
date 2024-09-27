@@ -64,7 +64,17 @@ class OutlineManager:
             return self.clients[server_id].delete_key(key_id)
         raise ValueError(f"Server ID {server_id} not found.")
 
-    async def rename_key(self, server_id: int, key_id: str, new_key_name: str):
+    async def rename_key(self, server_id: str, key_id: str, new_key_name: str):
         if server_id in self.clients:
             return self.clients[server_id].rename_key(key_id, new_key_name)
+        raise ValueError(f"Server ID {server_id} not found.")
+
+    async def delete_limit(self, server_id: str, key_id: str):
+        if server_id in self.clients:
+            return self.clients[server_id].delete_data_limit(key_id)
+        raise ValueError(f"Server ID {server_id} not found.")
+
+    async def upd_limit(self, server_id: str, key_id: str):
+        if server_id in self.clients:
+            return self.clients[server_id].add_data_limit(key_id, 0)
         raise ValueError(f"Server ID {server_id} not found.")

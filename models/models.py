@@ -1,9 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, Enum
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+
+class SubscriptionStatusEnum(str, Enum):
+    ACTIVE = 'активная'
+    EXPIRED = 'истекла'
+    CANCELED = 'отменена'
 
 
 class Users(Base):
@@ -34,6 +40,7 @@ class VPNKeys(Base):
     server_name = Column(String, nullable=False)
     issued_at = Column(DateTime, default=None)
     is_active = Column(Integer, default=False)
+    is_limit = Column(Integer, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -47,6 +54,7 @@ class Subscriptions(Base):
     vpn_key_id = Column(Integer, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
+    status = Column(String, default=SubscriptionStatusEnum.ACTIVE)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -14,9 +14,10 @@ async def process_successful_payment(message):
     async with DatabaseContextManager() as session_methods:
         try:
             logger.info("Transaction started for adding user and service.")
+            await refund_payment(message)
             manager = OutlineManager()
             await manager.wait_for_initialization()
-            server_id = int(message.successful_payment.invoice_payload.split(':')[2])
+            server_id = message.successful_payment.invoice_payload.split(':')[2]
 
             transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
             if not transaction_state:
@@ -39,8 +40,8 @@ async def process_successful_payment(message):
 
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
-            await message.answer(text=f"К сожалению, покупка отменена:\n{e}")
-            await refund_payment(message)
+            await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
+            # await refund_payment(message)
 
             await session_methods.session.rollback()
 
@@ -74,7 +75,6 @@ async def update_vpn_key(vpn_key_id: int, session_methods):
     vpn_key = VPNKeys(
         vpn_key_id=vpn_key_id,
         is_active=1,
-        is_blocked=0,
     )
     await session_methods.vpn_keys.update_vpn_key(vpn_key)
 

@@ -12,6 +12,7 @@ from handlers.user import createorder, subs, start, support
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
 from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
+from services.subscription_checker import run_checker
 
 
 async def on_startup(bot: Bot):
@@ -70,6 +71,8 @@ async def main():
     dp.include_router(refund.router)
 
     dp.include_router(cancel.router)
+
+    asyncio.create_task(run_checker(bot))
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:

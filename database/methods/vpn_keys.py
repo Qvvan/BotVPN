@@ -1,11 +1,11 @@
 from datetime import datetime
 
+from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
 from logger.logging_config import logger
-
-
 from models.models import VPNKeys, Subscriptions, Users, Services
 
 
@@ -29,7 +29,7 @@ class VPNKeyMethods:
             return False
         except SQLAlchemyError as e:
             await self.session.rollback()
-            print(f"Error updating VPN key: {e}")
+            logger.error(f"Error updating VPN key: {e}")
             return False
 
     async def get_vpn_key(self):
@@ -40,7 +40,7 @@ class VPNKeyMethods:
             vpn_key = result.scalars().first()
             return vpn_key
         except SQLAlchemyError as e:
-            print(f"Error retrieving VPN key: {e}")
+            logger.error(f"Error retrieving VPN key: {e}")
             return None
 
     async def add_vpn_key(self, key: str, server_name: str, outline_key_id: str, server_id: str):
@@ -51,8 +51,9 @@ class VPNKeyMethods:
                 server_name=server_name,
                 outline_key_id=outline_key_id,
             ))
-        except Exception as err:
-            return 'Не удалось добавить ключ', err
+        except Exception as e:
+            logger.error(f"Error add VPN key: {e}")
+            return None
 
     async def get_keys(self):
         try:
@@ -62,7 +63,7 @@ class VPNKeyMethods:
             vpn_key = result.scalars().all()
             return vpn_key
         except SQLAlchemyError as e:
-            print(f"Error retrieving VPN key: {e}")
+            logger.error(f"Error retrieving VPN key: {e}")
             return None
 
     async def del_key(self, key_code: str):
@@ -84,10 +85,8 @@ class VPNKeyMethods:
             logger.error('Не удалось удалить ключ', e)
             raise
 
-
     async def key_info(self, key_code: str):
         try:
-            # Проверяем, существует ли ключ
             result = await self.session.execute(
                 select(VPNKeys).filter_by(key=key_code)
             )
@@ -96,7 +95,6 @@ class VPNKeyMethods:
                 raise Exception('Ключ не найден')
             # Если ключ используется (is_active = 1)
             if vpn_key.is_active == 1:
-                # Получаем информацию о подписке
                 subscription_result = await self.session.execute(
                     select(Subscriptions)
                     .filter_by(vpn_key_id=vpn_key.vpn_key_id)
@@ -132,20 +130,20 @@ class VPNKeyMethods:
             logger.error('Ошибка при получении информации о ключе', e)
             raise
 
-
-    async def get_key_id(self, key_code: str):
+    async def update_limit(self, vpn_key_id: int, new_limit: int):
         try:
             result = await self.session.execute(
-                select(VPNKeys).filter_by(key=key_code)
+                update(VPNKeys).
+                where(VPNKeys.vpn_key_id == vpn_key_id).
+                values(is_limit=new_limit)
             )
-            vpn_key = result.scalar_one_or_none()
 
-            if vpn_key is None:
+            if result.rowcount == 0:
                 return False
 
-            return vpn_key
+            return True
 
         except SQLAlchemyError as e:
-            logger.error('Не удалось удалить ключ', e)
+            logger.error(f'Ошибка при обновлении лимита для ключа {vpn_key_id}: {e}')
+            await self.session.rollback()
             raise
-

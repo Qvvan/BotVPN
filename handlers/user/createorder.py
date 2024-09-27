@@ -24,8 +24,6 @@ async def create_order(message: Message, state: FSMContext):
     await state.set_state(ChoiceServer.waiting_for_choice)
 
 
-
-
 @router.callback_query(ServerCallbackFactory.filter(), ChoiceServer.waiting_for_choice)
 async def server_selected(callback_query: CallbackQuery, callback_data: ServerCallbackFactory, state: FSMContext):
     """Обрабатываем выбор сервера и создаем ключ."""
@@ -49,7 +47,8 @@ async def server_selected(callback_query: CallbackQuery, callback_data: ServerCa
 
 
 @router.callback_query(ServiceCallbackFactory.filter(), ChoiceServer.waiting_for_services)
-async def handle_service_callback(callback_query: CallbackQuery, callback_data: ServiceCallbackFactory, state: FSMContext):
+async def handle_service_callback(callback_query: CallbackQuery, callback_data: ServiceCallbackFactory,
+                                  state: FSMContext):
     service_id = int(callback_data.service_id)
     server_id = callback_data.server_id
 
@@ -79,10 +78,11 @@ async def server_selected(callback_query: CallbackQuery, state: FSMContext):
     await create_order(callback_query.message, state)
 
 
-async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id: int, duration_days: int,
+async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id: int,
+                               duration_days: int,
                                server_id: str):
     try:
-        prices = [LabeledPrice(label="XTR", amount=price_service)]
+        prices = [LabeledPrice(label="XTR", amount=1)]  # price_service
         await message.answer_invoice(
             title=f"VPN на {service_name}",
             description=f"Для оформления подписки, оплати {price_service} звезд по ссылке ниже.\n"
@@ -91,7 +91,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
             provider_token="",
             payload=f"{service_id}:{duration_days}:{server_id}",
             currency="XTR",
-            reply_markup=await InlineKeyboards.create_pay(price_service),
+            reply_markup=await InlineKeyboards.create_pay(1),
         )
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")
