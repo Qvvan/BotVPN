@@ -28,10 +28,12 @@ async def process_api_url(message: types.Message, state: FSMContext):
             if not vpn_key_info:
                 await message.answer('Такого ключа не существует')
             else:
-                await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
                 await session_methods.vpn_keys.del_key(vpn_code)
+                await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
                 await message.answer('Ключ успешно удален')
+                await session_methods.session.commit()
         except Exception as e:
+            await session_methods.session.rollback()
             await message.answer(text=f'Не удалось удалить ключ:\n{e}')
 
     await state.clear()

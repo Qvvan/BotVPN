@@ -77,7 +77,6 @@ class VPNKeyMethods:
                 raise
 
             await self.session.delete(vpn_key)
-            await self.session.commit()
 
             return True
 
@@ -146,4 +145,20 @@ class VPNKeyMethods:
         except SQLAlchemyError as e:
             logger.error(f'Ошибка при обновлении лимита для ключа {vpn_key_id}: {e}')
             await self.session.rollback()
+            raise
+
+    async def get_key_id(self, key_code: str):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(key=key_code)
+            )
+            vpn_key = result.scalar_one_or_none()
+
+            if vpn_key is None:
+                return False
+
+            return vpn_key
+
+        except SQLAlchemyError as e:
+            logger.error('Не удалось удалить ключ', e)
             raise
