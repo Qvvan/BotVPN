@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 
 from database.context_manager import DatabaseContextManager
@@ -32,7 +31,6 @@ async def process_successful_payment(message):
 
             if not subscription_created:
                 raise Exception("Ошибка создания подписки")
-
 
             await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
             await send_success_response(message, vpn_key.key)

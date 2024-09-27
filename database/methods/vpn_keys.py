@@ -162,3 +162,19 @@ class VPNKeyMethods:
         except SQLAlchemyError as e:
             logger.error('Не удалось удалить ключ', e)
             raise
+
+    async def get_by_id(self, vpn_key_id: int):
+        try:
+            result = await self.session.execute(
+                select(VPNKeys).filter_by(vpn_key_id=vpn_key_id)
+            )
+            vpn_key = result.scalar_one_or_none()
+
+            if vpn_key is None:
+                return False
+
+            return vpn_key
+
+        except SQLAlchemyError as e:
+            logger.error('Не удалось удалить ключ', e)
+            raise

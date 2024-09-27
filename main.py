@@ -7,7 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data import config
 from database.init_db import DataBase
-from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel
+from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel, block_key
 from handlers.user import createorder, subs, start, support
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
@@ -69,6 +69,7 @@ async def main():
     dp.include_router(help_info.router)
     dp.include_router(key_info.router)
     dp.include_router(refund.router)
+    dp.include_router(block_key.router)
 
     dp.include_router(cancel.router)
 

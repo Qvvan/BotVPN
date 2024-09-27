@@ -34,14 +34,14 @@ async def check_subscriptions(bot: Bot):
                             status=SubscriptionStatusEnum.EXPIRED,
                         ))
 
-                        server_info = await session_methods.servers.get_server_by_vpn_key_id(sub.vpn_key_id)
+                        server_info = await session_methods.vpn_keys.get_by_id(sub.vpn_key_id)
+                        if not server_info:
+                            logger.error(f"Подписка есть, а ключа такого в базе нет, ошиибка!")
+                            continue
 
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=1)
 
-                        server_id = server_info[0]
-                        outline_vpn_key_id = server_info[1]
-
-                        await manager.upd_limit(server_id, outline_vpn_key_id)
+                        await manager.upd_limit(server_info.server_id, server_info.outline_key_id)
 
                         await bot.send_message(
                             chat_id=sub.user_id,
