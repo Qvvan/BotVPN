@@ -27,5 +27,10 @@ class DeleteKey(StatesGroup):
 class KeyInfo(StatesGroup):
     waiting_key_info = State()
 
+
 class KeyBlock(StatesGroup):
     waiting_key_block = State()
+
+
+class UnblockKey(StatesGroup):
+    waiting_key_unblock = State()
