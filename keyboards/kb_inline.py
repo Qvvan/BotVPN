@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -115,32 +117,33 @@ class InlineKeyboards:
         return keyboard.as_markup()
 
     @staticmethod
-    async def extend_subscription(subscription_id) -> InlineKeyboardMarkup:
+    async def extend_subscription(subscription_id: int) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.add(InlineKeyboardButton(
             text='🔄 Продлить подписку',
             callback_data=SubscriptionCallbackFactory(
                 action='extend_subscription',
-                subscription_id=subscription_id
+                subscription_id=subscription_id,
             ).pack()
         ))
         return keyboard.as_markup()
 
     @staticmethod
     async def extend_subscription_options(subscription_id) -> InlineKeyboardMarkup:
+
         keyboard = InlineKeyboardBuilder()
         keyboard.add(
             InlineKeyboardButton(
                 text='🔄 Продлить',
                 callback_data=SubscriptionCallbackFactory(
                     action='extend_with_key',
-                    subscription_id=subscription_id,
+                    subscription_id=subscription_id
             ).pack()),
             InlineKeyboardButton(
                 text='🆕 Новая услуга',
                 callback_data=SubscriptionCallbackFactory(
                     action='new_order',
-                    subscription_id=subscription_id,
+                    subscription_id=subscription_id
             ).pack()),
         )
         return keyboard.as_markup()

@@ -23,7 +23,11 @@ class SubscriptionMethods:
                     VPNKeys.server_name,
                     Services.name,
                     Subscriptions.status,
-                    Subscriptions.subscription_id
+                    Subscriptions.subscription_id,
+                    Services.duration_days,
+                    Services.price,
+                    Services.service_id,
+                    VPNKeys.server_id
                 ).select_from(Subscriptions)
                 .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)
                 .join(Services, Subscriptions.service_id == Services.service_id)
@@ -31,7 +35,7 @@ class SubscriptionMethods:
             )
 
             result = await self.session.execute(query)
-            subscription = result.fetchall()
+            subscription = result.mappings().all()
             if len(subscription) == 0:
                 return None
 

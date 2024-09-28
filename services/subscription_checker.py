@@ -36,7 +36,7 @@ async def check_subscriptions(bot: Bot):
 
                         server_info = await session_methods.vpn_keys.get_by_id(sub.vpn_key_id)
                         if not server_info:
-                            logger.error(f"Подписка есть, а ключа такого в базе нет, ошиибка!")
+                            logger.error(f"Подписка есть, а ключа такого в базе нет, ошибка!")
                             continue
 
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=1)
@@ -61,4 +61,4 @@ async def run_checker(bot: Bot):
     while True:
         logger.info("Running subscription checker...")
         await check_subscriptions(bot)
-        await asyncio.sleep(600)
+        await asyncio.sleep(5)
