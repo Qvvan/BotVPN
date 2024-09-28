@@ -119,7 +119,10 @@ class VPNKeyMethods:
                             "start_date": subscription.start_date,
                             "end_date": subscription.end_date,
                             "last_update": vpn_key.updated_at,
-                            "service_name": service.name
+                            "service_name": service.name,
+                            "server": vpn_key.server_name,
+                            "limit": vpn_key.is_limit,
+                            "status": subscription.status,
                         }
 
             # Если ключ не активен (is_active = 0)
