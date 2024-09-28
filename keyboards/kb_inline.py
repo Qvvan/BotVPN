@@ -13,9 +13,14 @@ class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
     server_id: str
 
+
 class ServerCallbackFactory(CallbackData, prefix='select_server'):
     server_id: str
     available_keys: int
+
+class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
+    action: str
+    subscription_id: int
 
 
 class InlineKeyboards:
@@ -107,4 +112,35 @@ class InlineKeyboards:
         keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='cancel'))
         keyboard.adjust(1)
 
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def extend_subscription(subscription_id) -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(InlineKeyboardButton(
+            text='🔄 Продлить подписку',
+            callback_data=SubscriptionCallbackFactory(
+                action='extend_subscription',
+                subscription_id=subscription_id
+            ).pack()
+        ))
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def extend_subscription_options(subscription_id) -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(
+            InlineKeyboardButton(
+                text='🔄 Продлить',
+                callback_data=SubscriptionCallbackFactory(
+                    action='extend_with_key',
+                    subscription_id=subscription_id,
+            ).pack()),
+            InlineKeyboardButton(
+                text='🆕 Новая услуга',
+                callback_data=SubscriptionCallbackFactory(
+                    action='new_order',
+                    subscription_id=subscription_id,
+            ).pack()),
+        )
         return keyboard.as_markup()
