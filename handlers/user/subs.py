@@ -1,14 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery
+from aiogram.types import Message, CallbackQuery, LabeledPrice
 
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import InlineKeyboards, SubscriptionCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
+from models.models import Subscriptions, SubscriptionStatusEnum
+from outline.outline_manager.outline_manager import OutlineManager
 
 router = Router()
 
@@ -79,8 +81,6 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
             await callback.message.answer(text="Что-то пошло не так, обратитесь в техподдержку")
 
 
-
-
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'new_order'))
 async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallbackFactory):
     subscription_id = callback_data.subscription_id
@@ -97,7 +97,7 @@ async def send_invoice_handler(message: Message, sub: Any):
             description=f"Для продления подписки, оплати {sub.price} звезд по ссылке ниже.\n",
             prices=prices,
             provider_token="",
-            payload=f"{sub.service_id}:{sub.duration_days}:{sub.server_id}",
+            payload=f"{sub.service_id}:{sub.duration_days}:{sub.server_id}:old",
             currency="XTR",
             reply_markup=await InlineKeyboards.create_pay(1),
         )
@@ -106,11 +106,72 @@ async def send_invoice_handler(message: Message, sub: Any):
         await message.answer(text="Что-то пошло не так, обратитесь в техподдержку")
 
 
-# @router.pre_checkout_query()
-# async def pre_checkout_query(query: PreCheckoutQuery):
-#     await query.answer(ok=True)
-#
-#
-# @router.message(F.successful_payment)
-# async def successful_payment(message: Message):
-#     await extend_sub_successful_payment(message)
+async def extend_sub_successful_payment(message: Message):
+    async with DatabaseContextManager() as session_methods:
+        try:
+            logger.info("Transaction started for adding user and service.")
+            manager = OutlineManager()
+            await manager.wait_for_initialization()
+
+            in_payload = message.successful_payment.invoice_payload.split(':')
+            service_id = int(in_payload[0])
+            durations_days = in_payload[1]
+
+            subs = await session_methods.subscription.get_subscription(message.from_user.id)
+            if subs:
+                transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
+                if not transaction_state:
+                    raise Exception("Ошибка сохранения транзакции")
+
+                for sub in subs:
+                    if sub.service_id == service_id:
+                        await session_methods.subscription.update_sub(Subscriptions(
+                            user_id=message.from_user.id,
+                            service_id=service_id,
+                            vpn_key_id=sub.vpn_key_id,
+                            start_date=datetime.now(),
+                            end_date=datetime.now() + timedelta(days=int(durations_days)),
+                            updated_at=datetime.now(),
+                            status=SubscriptionStatusEnum.ACTIVE,
+                        ))
+                        await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=0)
+
+                        await manager.delete_key(sub.server_id, sub.outline_key_id)
+                        await message.answer(text="Спасибо что остаетесь с нами!\n"
+                                                  "Ваша подписка успешно продлена!")
+                        await session_methods.session.commit()
+        except Exception as e:
+            logger.error(f"Error during transaction processing: {e}")
+            await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
+            await refund_payment(message)
+
+            await session_methods.session.rollback()
+
+            await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
+            await session_methods.session.commit()
+
+
+async def create_transaction(message, status, description: str, session_methods):
+    in_payload = message.successful_payment.invoice_payload.split(':')
+
+    transaction_code = message.successful_payment.telegram_payment_charge_id
+    service_id = int(in_payload[0])
+    user_id = message.from_user.id
+
+    transaction = await session_methods.transactions.add_transaction(
+        transaction_code=transaction_code,
+        service_id=service_id,
+        user_id=user_id,
+        status=status,
+        description=description,
+    )
+
+    return transaction
+
+
+async def refund_payment(message):
+    await message.bot.refund_star_payment(message.from_user.id, message.successful_payment.telegram_payment_charge_id)
+
+
+async def new_order_successful_payment(message: Message):
+    await message.answer("Новый заказ успешно оформлен!")

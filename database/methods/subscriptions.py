@@ -27,7 +27,10 @@ class SubscriptionMethods:
                     Services.duration_days,
                     Services.price,
                     Services.service_id,
-                    VPNKeys.server_id
+                    VPNKeys.server_id,
+                    VPNKeys.issued_at,
+                    VPNKeys.outline_key_id,
+                    VPNKeys.vpn_key_id,
                 ).select_from(Subscriptions)
                 .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)
                 .join(Services, Subscriptions.service_id == Services.service_id)
@@ -67,7 +70,7 @@ class SubscriptionMethods:
             return True
         except SQLAlchemyError as e:
             logger.error(f"Error updating subscription: {e}")
-            return False
+            raise
 
     async def create_sub(self, sub: Subscriptions):
         try:

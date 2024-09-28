@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from config_data.config import ADMIN_IDS
 from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
+from keyboards.kb_inline import InlineKeyboards
 from outline.outline_manager.outline_manager import OutlineManager
 from state.state import DeleteKey
 
@@ -13,7 +14,10 @@ router = Router()
 
 @router.message(Command(commands='del_key'), IsAdmin(ADMIN_IDS))
 async def show_commands(message: types.Message, state: FSMContext):
-    await message.answer(text='Отправь VPN ключ и я его тут же удалю')
+    await message.answer(
+        text='Отправь VPN ключ и я его тут же удалю',
+        reply_markup=await InlineKeyboards.cancel()
+    )
     await state.set_state(DeleteKey.waiting_key_code)
 
 

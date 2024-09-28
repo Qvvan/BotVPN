@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from config_data.config import ADMIN_IDS
 from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
+from keyboards.kb_inline import InlineKeyboards
 from state.state import KeyInfo
 
 router = Router()
@@ -12,7 +13,10 @@ router = Router()
 
 @router.message(Command(commands='key_info'), IsAdmin(ADMIN_IDS))
 async def show_commands(message: types.Message, state: FSMContext):
-    await message.answer(text='Отправьте ключ, для получения полной информации')
+    await message.answer(
+        text='Отправьте ключ, для получения полной информации',
+        reply_markup=await InlineKeyboards.cancel()
+    )
     await state.set_state(KeyInfo.waiting_key_info)
 
 

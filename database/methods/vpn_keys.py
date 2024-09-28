@@ -19,7 +19,6 @@ class VPNKeyMethods:
             existing_key = result.scalars().first()
 
             if existing_key:
-                existing_key.issued_at = vpnkey.issued_at
                 existing_key.is_active = vpnkey.is_active
                 existing_key.issued_at = datetime.now()
                 existing_key.updated_at = datetime.now()

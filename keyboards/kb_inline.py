@@ -1,5 +1,3 @@
-from typing import Any
-
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -19,6 +17,7 @@ class ServiceCallbackFactory(CallbackData, prefix='service'):
 class ServerCallbackFactory(CallbackData, prefix='select_server'):
     server_id: str
     available_keys: int
+
 
 class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
     action: str
@@ -70,7 +69,6 @@ class InlineKeyboards:
         support_user_id = "qvvan"
         support_link = f"t.me/{support_user_id}"
 
-        # Создание кнопки со ссылкой на пользователя
         support_button = InlineKeyboardButton(
             text="Связаться с поддержкой 🛠️",
             url=support_link
@@ -138,12 +136,18 @@ class InlineKeyboards:
                 callback_data=SubscriptionCallbackFactory(
                     action='extend_with_key',
                     subscription_id=subscription_id
-            ).pack()),
+                ).pack()),
             InlineKeyboardButton(
                 text='🆕 Новая услуга',
                 callback_data=SubscriptionCallbackFactory(
                     action='new_order',
                     subscription_id=subscription_id
-            ).pack()),
+                ).pack()),
         )
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def support() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
         return keyboard.as_markup()

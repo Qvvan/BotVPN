@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, PreCheckoutQuery, LabeledPrice
 
 from database.context_manager import DatabaseContextManager
+from handlers.user.subs import extend_sub_successful_payment, new_order_successful_payment
 from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory, ServerCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
@@ -89,7 +90,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
                         f"⬇️ После успешной оплаты, тебе будут высланы данные и инструкция для подключения VPN. 😎",
             prices=prices,
             provider_token="",
-            payload=f"{service_id}:{duration_days}:{server_id}",
+            payload=f"{service_id}:{duration_days}:{server_id}:new",
             currency="XTR",
             reply_markup=await InlineKeyboards.create_pay(1),
         )
@@ -105,4 +106,11 @@ async def pre_checkout_query(query: PreCheckoutQuery):
 
 @router.message(F.successful_payment)
 async def successful_payment(message: Message):
-    await process_successful_payment(message)
+    payload = message.successful_payment.invoice_payload
+    service_id, duration_days, server_id, action = payload.split(':')
+    if action == 'new':
+        await process_successful_payment(message)
+    elif action == 'old':
+        await extend_sub_successful_payment(message)
+    elif action == 'extend':
+        await new_order_successful_payment(message)

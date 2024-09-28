@@ -6,6 +6,7 @@ from outline_vpn.outline_vpn import OutlineVPN
 from config_data.config import ADMIN_IDS
 from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
+from keyboards.kb_inline import InlineKeyboards
 from state.state import AddAdmin
 
 router = Router()
@@ -13,7 +14,10 @@ router = Router()
 
 @router.message(Command(commands='add_server'), IsAdmin(ADMIN_IDS))
 async def show_commands(message: types.Message, state: FSMContext):
-    await message.answer(text='Отправь apiUrl:')
+    await message.answer(
+        text='Отправь apiUrl:',
+        reply_markup=await InlineKeyboards.cancel()
+        )
     await state.set_state(AddAdmin.waiting_apiUrl)
 
 
@@ -37,7 +41,6 @@ async def process_cert_sha256(message: types.Message, state: FSMContext):
         server_info = client.get_server_information()
     except Exception as e:
         await message.answer(f"Ошибка при соединении с сервером:\n{e}")
-        return
     SERVER = {
         "SERVER_ID": server_info['serverId'],
         "NAME": server_info['name'],

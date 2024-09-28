@@ -28,7 +28,6 @@ async def server_selected(call: types.CallbackQuery, state: FSMContext):
     manager = OutlineManager()
     await manager.wait_for_initialization()
     server_id = call.data.split(":")[1]
-    print(call.data)
 
     servers = await manager.list_servers()
     server_name = servers.get(server_id)
