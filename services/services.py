@@ -5,6 +5,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from main import logger
 from models.models import Transactions, Subscriptions, VPNKeys
 from outline.outline_manager.outline_manager import OutlineManager
+from services.send_sms_admins import notify_group
 
 
 async def process_successful_payment(message):
@@ -13,10 +14,11 @@ async def process_successful_payment(message):
     async with DatabaseContextManager() as session_methods:
         try:
             logger.info("Transaction started for adding user and service.")
-            await refund_payment(message)
             manager = OutlineManager()
             await manager.wait_for_initialization()
+            in_payload = message.successful_payment.invoice_payload.split(':')
             server_id = message.successful_payment.invoice_payload.split(':')[2]
+            durations_days = in_payload[1]
 
             transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
             if not transaction_state:
@@ -35,16 +37,28 @@ async def process_successful_payment(message):
             await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
             await send_success_response(message, vpn_key.key)
             await session_methods.session.commit()
+            await notify_group(
+                message=f'Пользователь: @{message.from_user.username}\n'
+                        f'ID: {message.from_user.id}\n'
+                        f'Оформил новую подписку: {durations_days} дней\n'
+                        f'#подписка'
+            )
 
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
             await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
-            # await refund_payment(message)
+            await refund_payment(message)
 
             await session_methods.session.rollback()
 
             await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
             await session_methods.session.commit()
+            await notify_group(
+                message=f'Пользователь: @{message.from_user.username}\n'
+                        f'ID: {message.from_user.id}\n'
+                        f'Пытался оформить подписку:\n{e}\n\n'
+                        f'#подписка'
+            )
 
 
 async def create_transaction(message, status, description: str, session_methods) -> Transactions:

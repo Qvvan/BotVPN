@@ -49,4 +49,3 @@ async def server_selected(call: types.CallbackQuery, state: FSMContext):
         except Exception as e:
             await call.message.answer(f'Не удалось создать ключ, ошибка:\n{e}')
 
-        await state.clear()

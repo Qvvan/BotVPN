@@ -11,6 +11,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Subscriptions, SubscriptionStatusEnum
 from outline.outline_manager.outline_manager import OutlineManager
+from services.send_sms_admins import notify_group
 
 router = Router()
 
@@ -19,35 +20,42 @@ router = Router()
 async def get_user_subs(message: Message):
     user_id = message.from_user.id
     async with DatabaseContextManager() as session:
-        subscription_data = await session.subscription.get_subscription(user_id)
-        if subscription_data is None:
-            await message.answer(text=LEXICON_RU['not_exists'])
-            return
-        for data in subscription_data:
-            start_date = data.start_date
-            end_date = data.end_date
-            vpn_key = data.key
-            server_name = data.server_name
-            service_name = data.name
-            status = data.status
+        try:
+            subscription_data = await session.subscription.get_subscription(user_id)
+            if subscription_data is None:
+                await message.answer(text=LEXICON_RU['not_exists'])
+                return
+            for data in subscription_data:
+                start_date = data.start_date
+                end_date = data.end_date
+                vpn_key = data.key
+                server_name = data.server_name
+                service_name = data.name
+                status = data.status
 
-            parseSubs = (
-                f"📶 Статус: {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
-                f"💼 Услуга: {service_name}\n\n"
-                f"📆 Дата начала: {start_date.strftime('%Y-%m-%d')}\n"
-                f"📆 Дата окончания: {end_date.strftime('%Y-%m-%d')}\n\n"
-                f"Страна: {server_name}\n"
-                f"🔑 Ключ: {vpn_key}"
-            )
-
-            if status == 'истекла':
-                keyboard = await InlineKeyboards.extend_subscription(data.subscription_id)
-                await message.answer(
-                    text=parseSubs + "\n\n🔄 Ваша подписка истекла. Хотите продлить?",
-                    reply_markup=keyboard
+                parseSubs = (
+                    f"📶 Статус: {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
+                    f"💼 Услуга: {service_name}\n\n"
+                    f"📆 Дата начала: {start_date.strftime('%Y-%m-%d')}\n"
+                    f"📆 Дата окончания: {end_date.strftime('%Y-%m-%d')}\n\n"
+                    f"Страна: {server_name}\n"
+                    f"🔑 Ключ: {vpn_key}"
                 )
-            else:
-                await message.answer(text=parseSubs)
+
+                if status == 'истекла':
+                    keyboard = await InlineKeyboards.extend_subscription(data.subscription_id)
+                    await message.answer(
+                        text=parseSubs + "\n\n🔄 Ваша подписка истекла. Хотите продлить?",
+                        reply_markup=keyboard
+                    )
+                else:
+                    await message.answer(text=parseSubs)
+
+        except Exception as e:
+            logger.error('Ошибка при получении подписок', e)
+            await notify_group(
+                message=f'Ошибка при получении подписок у пользователя:\n{message.from_user.id}\n{message.from_user.username}',
+                is_error=True)
 
 
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'extend_subscription'))
@@ -79,6 +87,9 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
         except Exception as e:
             logger.error('Ошибка при продлении подписки', e)
             await callback.message.answer(text="Что-то пошло не так, обратитесь в техподдержку")
+            await notify_group(
+                message=f'Ошибка при продлении подписки:\n{callback.message.from_user.id}\n{callback.message.from_user.username}',
+                is_error=True)
 
 
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'new_order'))
@@ -140,6 +151,10 @@ async def extend_sub_successful_payment(message: Message):
                         await message.answer(text="Спасибо что остаетесь с нами!\n"
                                                   "Ваша подписка успешно продлена!")
                         await session_methods.session.commit()
+                        await notify_group(
+                            message=f'Пользователь: {message.from_user.username}\n'
+                                    f'ID: {message.from_user.id}\n'
+                                    f'Продлил подписку на {durations_days} дней',)
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
             await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
@@ -149,6 +164,9 @@ async def extend_sub_successful_payment(message: Message):
 
             await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
             await session_methods.session.commit()
+            await notify_group(
+                message=f'Ошибка при формировании подписки при продлении:\n{message.from_user.id}\n{message.from_user.username}',
+                is_error=True)
 
 
 async def create_transaction(message, status, description: str, session_methods):

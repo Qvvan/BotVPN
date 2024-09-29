@@ -22,6 +22,8 @@ class UserMethods:
         try:
             if not await self.user_exists(user.tg_id):
                 self.session.add(user)
+                return True
+            return False
         except IntegrityError as e:
             print(f"Error adding user: {e}")
         except SQLAlchemyError as e:

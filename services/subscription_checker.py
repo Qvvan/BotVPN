@@ -8,6 +8,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Subscriptions, SubscriptionStatusEnum
 from outline.outline_manager.outline_manager import OutlineManager
+from services.send_sms_admins import notify_group
 
 
 async def check_subscriptions(bot: Bot):
@@ -37,6 +38,14 @@ async def check_subscriptions(bot: Bot):
                         server_info = await session_methods.vpn_keys.get_by_id(sub.vpn_key_id)
                         if not server_info:
                             logger.error(f"Подписка есть, а ключа такого в базе нет, ошибка!")
+                            await notify_group(
+                                message=f'ID: {sub.user_id}\n'
+                                        f'Подписка есть, а ключа в базе нет.\n\n'
+                                        f'ID подписки: {sub.subscription_id}'
+                                        f'ID пользователя: {sub.user_id}\n'
+                                        f'#подписка',
+                                is_error=True
+                            )
                             continue
 
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=1)
@@ -49,6 +58,13 @@ async def check_subscriptions(bot: Bot):
                         )
                         logger.info(
                             f"Подписка {sub.subscription_id} истекла. Ключ {sub.vpn_key_id} заблокирован.")
+
+                        await notify_group(
+                            message=f'ID: {sub.user_id}\n'
+                                    f'Подписка истекла\n\n'
+                                    f'Ключ заблокирован: \n{server_info.key}\n\n'
+                                    f'#подписка'
+                        )
 
                 await session_methods.session.commit()
         except Exception as e:

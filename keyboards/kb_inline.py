@@ -66,7 +66,7 @@ class InlineKeyboards:
     async def get_support() -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
 
-        support_user_id = "qvvan"
+        support_user_id = "Masknet_Support"
         support_link = f"t.me/{support_user_id}"
 
         support_button = InlineKeyboardButton(

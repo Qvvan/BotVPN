@@ -9,6 +9,7 @@ from handlers.user.subs import extend_sub_successful_payment, new_order_successf
 from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory, ServerCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
+from services.send_sms_admins import notify_group
 from services.services import process_successful_payment
 from state.state import ChoiceServer
 
@@ -70,6 +71,13 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
         except Exception as e:
             logger.error(f'Произошла ошибка: {e}')
             await callback_query.message.answer(text="Что-то пошло не так, обратитесь в техподдержку")
+            await notify_group(
+                message=f'Пользователь: @{callback_query.message.from_user.username}\n'
+                        f'ID: {callback_query.message.from_user.id}\n'
+                        f'Произошла ошибка при формировании оплаты\n{e}\n\n'
+                        f'#оплата',
+                is_error=True
+            )
 
 
 @router.callback_query(lambda c: c.data == 'back_to_servers', ChoiceServer.waiting_for_services)
