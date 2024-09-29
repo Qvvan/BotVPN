@@ -61,4 +61,4 @@ async def run_checker(bot: Bot):
     while True:
         logger.info("Running subscription checker...")
         await check_subscriptions(bot)
-        await asyncio.sleep(5)
+        await asyncio.sleep(600)
