@@ -102,7 +102,7 @@ async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallback
 async def send_invoice_handler(message: Message, sub: Any):
     try:
 
-        prices = [LabeledPrice(label="XTR", amount=1)]
+        prices = [LabeledPrice(label="XTR", amount=sub.price)]
         await message.answer_invoice(
             title=f"VPN на {sub.name}",
             description=f"Для продления подписки, оплати {sub.price} звезд по ссылке ниже.\n",
@@ -110,7 +110,7 @@ async def send_invoice_handler(message: Message, sub: Any):
             provider_token="",
             payload=f"{sub.service_id}:{sub.duration_days}:{sub.server_id}:old",
             currency="XTR",
-            reply_markup=await InlineKeyboards.create_pay(1),
+            reply_markup=await InlineKeyboards.create_pay(sub.price),
         )
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")

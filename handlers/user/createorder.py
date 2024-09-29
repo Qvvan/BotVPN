@@ -91,7 +91,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
                                duration_days: int,
                                server_id: str):
     try:
-        prices = [LabeledPrice(label="XTR", amount=1)]  # price_service
+        prices = [LabeledPrice(label="XTR", amount=price_service)]
         await message.answer_invoice(
             title=f"VPN на {service_name}",
             description=f"Для оформления подписки, оплати {price_service} звезд по ссылке ниже.\n"
@@ -100,7 +100,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
             provider_token="",
             payload=f"{service_id}:{duration_days}:{server_id}:new",
             currency="XTR",
-            reply_markup=await InlineKeyboards.create_pay(1),
+            reply_markup=await InlineKeyboards.create_pay(price_service),
         )
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")
