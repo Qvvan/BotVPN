@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Integer, DateTime, Enum
+from sqlalchemy import Column, String, Integer, DateTime, Enum, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -16,7 +16,7 @@ class Users(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(Integer, unique=True, index=True, nullable=False)
+    tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
     username = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -49,7 +49,7 @@ class Subscriptions(Base):
     __tablename__ = 'subscriptions'
 
     subscription_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(BigInteger, nullable=False)
     service_id = Column(Integer, nullable=False)
     vpn_key_id = Column(Integer, nullable=False)
     start_date = Column(DateTime, nullable=False)
@@ -65,7 +65,7 @@ class Transactions(Base):
     transaction_id = Column(Integer, primary_key=True, autoincrement=True)
     transaction_code = Column(String, unique=True, nullable=False)
     service_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(BigInteger, nullable=False)
     status = Column(String)
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -86,6 +86,6 @@ class Admins(Base):
     __tablename__ = 'admins'
 
     admin_id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(Integer, unique=True, index=True, nullable=False)
+    tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
     username = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

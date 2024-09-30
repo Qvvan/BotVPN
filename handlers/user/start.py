@@ -12,6 +12,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
+    await message.answer(text=LEXICON_RU['start'])
     user = Users(
         tg_id=message.from_user.id,
         username=message.from_user.username,
@@ -24,5 +25,4 @@ async def process_start_command(message: Message):
                         f'ID: {message.from_user.id}\n'
                         f'Присоединился к нам в команду\n#start')
         await session_methods.session.commit()
-        await message.answer(text=LEXICON_RU['start'])
 
