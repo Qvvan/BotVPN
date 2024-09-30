@@ -17,7 +17,7 @@ async def add_key_command(message: types.Message, state: FSMContext):
     """Вывод клавиатуры для выбора сервера."""
     await message.answer(
         text="Выберите сервер для создания нового VPN ключа:",
-        reply_markup=await InlineKeyboards.server_selection_keyboards()
+        reply_markup=await InlineKeyboards.server_selection_keyboards(not_show_server=False)
     )
     await state.set_state(AddKeyStates.waiting_for_server)
 
@@ -31,6 +31,8 @@ async def server_selected(call: types.CallbackQuery, state: FSMContext):
 
     servers = await manager.list_servers()
     server_name = servers.get(server_id)
+
+    await state.clear()
 
     if server_name is None:
         await call.message.answer("Сервер не найден.")

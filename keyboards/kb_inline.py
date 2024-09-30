@@ -69,12 +69,32 @@ class InlineKeyboards:
         support_user_id = "Masknet_Support"
         support_link = f"t.me/{support_user_id}"
 
+        # Кнопка для связи с поддержкой
         support_button = InlineKeyboardButton(
             text="Связаться с поддержкой 🛠️",
             url=support_link
         )
 
-        keyboard.add(support_button)
+        # Новые кнопки с добавленными смайликами
+        vpn_issue_button = InlineKeyboardButton(
+            text="VPN Не работает ❌",
+            callback_data="vpn_issue"
+        )
+        low_speed_button = InlineKeyboardButton(
+            text="Низкая скорость 🐢",
+            callback_data="low_speed"
+        )
+        install_guide_button = InlineKeyboardButton(
+            text="Инструкция по установке 📄",
+            callback_data="install_guide"
+        )
+
+        # Добавляем кнопки в отдельные строки
+        keyboard.row(support_button)          # Первая строка
+        keyboard.row(vpn_issue_button)        # Вторая строка
+        keyboard.row(low_speed_button)        # Третья строка
+        keyboard.row(install_guide_button)    # Четвертая строка
+
         return keyboard.as_markup()
 
     @staticmethod
@@ -84,7 +104,7 @@ class InlineKeyboards:
         return keyboard.as_markup()
 
     @staticmethod
-    async def server_selection_keyboards() -> InlineKeyboardMarkup:
+    async def server_selection_keyboards(not_show_server: bool = True) -> InlineKeyboardMarkup:
         """Клавиатура для выбора серверов."""
         keyboard = InlineKeyboardBuilder()
         manager = OutlineManager()
@@ -106,7 +126,7 @@ class InlineKeyboards:
 
         for server_id, server_name in servers.items():
             n = count_server_keys.get(server_name, 0)
-            if n == 0:
+            if n == 0 and not_show_server:
                 continue
             callback_data = f"select_server:{server_id}:{n}"
             keyboard.add(InlineKeyboardButton(text=f"{server_name}\nДоступно: {n} ключей", callback_data=callback_data))
@@ -146,10 +166,4 @@ class InlineKeyboards:
                     subscription_id=subscription_id
                 ).pack()),
         )
-        return keyboard.as_markup()
-
-    @staticmethod
-    async def support() -> InlineKeyboardMarkup:
-        keyboard = InlineKeyboardBuilder()
-        keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
         return keyboard.as_markup()
