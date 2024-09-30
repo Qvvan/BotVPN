@@ -106,6 +106,8 @@ class InlineKeyboards:
 
         for server_id, server_name in servers.items():
             n = count_server_keys.get(server_name, 0)
+            if n == 0:
+                continue
             callback_data = f"select_server:{server_id}:{n}"
             keyboard.add(InlineKeyboardButton(text=f"{server_name}\nДоступно: {n} ключей", callback_data=callback_data))
 
