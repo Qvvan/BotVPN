@@ -34,3 +34,7 @@ class KeyBlock(StatesGroup):
 
 class UnblockKey(StatesGroup):
     waiting_key_unblock = State()
+
+
+class CancelSub(StatesGroup):
+    waiting_user_id = State()

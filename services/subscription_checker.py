@@ -26,15 +26,6 @@ async def check_subscriptions(bot: Bot):
                     if sub.status != SubscriptionStatusEnum.ACTIVE:
                         continue
                     if sub.end_date < current_date:
-                        await session_methods.subscription.update_sub(Subscriptions(
-                            user_id=sub.user_id,
-                            service_id=sub.service_id,
-                            vpn_key_id=sub.vpn_key_id,
-                            start_date=sub.start_date,
-                            end_date=sub.end_date,
-                            status=SubscriptionStatusEnum.EXPIRED,
-                        ))
-
                         server_info = await session_methods.vpn_keys.get_by_id(sub.vpn_key_id)
                         if not server_info:
                             logger.error(f"Подписка есть, а ключа такого в базе нет, ошибка!")
@@ -47,6 +38,15 @@ async def check_subscriptions(bot: Bot):
                                 is_error=True
                             )
                             continue
+
+                        await session_methods.subscription.update_sub(Subscriptions(
+                            user_id=sub.user_id,
+                            service_id=sub.service_id,
+                            vpn_key_id=sub.vpn_key_id,
+                            start_date=sub.start_date,
+                            end_date=sub.end_date,
+                            status=SubscriptionStatusEnum.EXPIRED,
+                        ))
 
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=1)
 
@@ -77,4 +77,4 @@ async def run_checker(bot: Bot):
     while True:
         logger.info("Running subscription checker...")
         await check_subscriptions(bot)
-        await asyncio.sleep(600)
+        await asyncio.sleep(3600)
