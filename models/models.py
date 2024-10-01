@@ -18,6 +18,7 @@ class Users(Base):
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
     username = Column(String)
+    ban = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -55,6 +56,7 @@ class Subscriptions(Base):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     status = Column(String, default=SubscriptionStatusEnum.ACTIVE)
+    reminder_sent = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

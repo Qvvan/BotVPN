@@ -94,3 +94,16 @@ class SubscriptionMethods:
         except SQLAlchemyError as e:
             logger.error('Не удалось получить подписки', e)
             raise
+
+    async def delete_sub(self, subscription_id: int):
+        try:
+            subscription = await self.session.get(Subscriptions, subscription_id)
+
+            if subscription:
+                await self.session.delete(subscription)
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при удалении подписки с ID {subscription_id}: {e}")
+            raise
