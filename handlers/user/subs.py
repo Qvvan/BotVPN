@@ -94,7 +94,6 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
                 is_error=True)
 
 
-
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'new_order'))
 async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallbackFactory):
     subscription_id = callback_data.subscription_id
@@ -155,7 +154,7 @@ async def extend_sub_successful_payment(message: Message):
                         await notify_group(
                             message=f'Пользователь: {message.from_user.username}\n'
                                     f'ID: {message.from_user.id}\n'
-                                    f'Продлил подписку на {durations_days} дней',)
+                                    f'Продлил подписку на {durations_days} дней', )
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
             await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
