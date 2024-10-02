@@ -32,8 +32,6 @@ async def server_selected(call: types.CallbackQuery, state: FSMContext):
     servers = await manager.list_servers()
     server_name = servers.get(server_id)
 
-    await state.clear()
-
     if server_name is None:
         await call.message.answer("Сервер не найден.")
         return

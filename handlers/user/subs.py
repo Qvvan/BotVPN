@@ -79,6 +79,8 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
             if subs:
                 for sub in subs:
                     if sub.subscription_id == subscription_id:
+                        await callback.answer()
+                        await callback.message.delete()
                         await send_invoice_handler(message=callback.message, sub=sub)
                         break
             else:
@@ -92,6 +94,7 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
                 is_error=True)
 
 
+
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'new_order'))
 async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallbackFactory):
     subscription_id = callback_data.subscription_id
@@ -101,7 +104,6 @@ async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallback
 
 async def send_invoice_handler(message: Message, sub: Any):
     try:
-
         prices = [LabeledPrice(label="XTR", amount=sub.price)]
         await message.answer_invoice(
             title=f"VPN на {sub.name}",
@@ -123,6 +125,7 @@ async def extend_sub_successful_payment(message: Message):
             logger.info("Transaction started for adding user and service.")
             manager = OutlineManager()
             await manager.wait_for_initialization()
+            await refund_payment(message)
 
             in_payload = message.successful_payment.invoice_payload.split(':')
             service_id = int(in_payload[0])

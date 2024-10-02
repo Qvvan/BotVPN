@@ -84,4 +84,10 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    while True:
+        try:
+            asyncio.run(main())
+        except Exception as e:
+            logger.error(f"Бот завершил работу с ошибкой: {e}")
+            logger.info("Перезапуск бота через 5 секунд...")
+            asyncio.sleep(5)

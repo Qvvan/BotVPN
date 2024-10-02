@@ -64,6 +64,7 @@ class SubscriptionMethods:
                 existing_sub.end_date = sub.end_date
                 existing_sub.updated_at = datetime.now()
                 existing_sub.status = sub.status
+                existing_sub.reminder_sent = sub.reminder_sent
 
                 self.session.add(existing_sub)
 

@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from aiogram import Bot
 
 from database.context_manager import DatabaseContextManager
-from database.init_db import DataBase
 from handlers.admin.block_key import block_key
 from handlers.admin.del_key import delete_key
 from lexicon.lexicon_ru import LEXICON_RU
@@ -13,14 +12,16 @@ from models.models import Subscriptions, SubscriptionStatusEnum
 
 
 async def check_subscriptions(bot: Bot):
-    try:
-        db = DataBase()
-        subs = await db.Session().subscription.get_subs()
-        current_date = datetime.utcnow() + timedelta(hours=3)
-    except Exception as e:
-        logger.error(f'Ошибка при получении подписок', e)
-        return
+    async with DatabaseContextManager() as session_methods:
+        try:
+            subs = await session_methods.subscription.get_subs()
+            if not subs:
+                return
+        except Exception as e:
+            logger.error(f'Ошибка при получении подписок', e)
+            return
 
+    current_date = datetime.utcnow() + timedelta(hours=3)
     for sub in subs:
         async with DatabaseContextManager() as session_methods:
             try:
@@ -38,7 +39,7 @@ async def process_subscription(bot: Bot, sub, current_date, session_methods):
     if days_until_end == 3 and not sub.reminder_sent:
         await send_reminder(bot, sub, session_methods)
 
-    elif sub.end_date < current_date:
+    elif sub.end_date < current_date and sub.reminder_sent:
         await handle_expired_subscription(bot, sub, server_info, session_methods)
 
     elif days_since_expiration > 5:
@@ -113,4 +114,4 @@ async def run_checker(bot: Bot):
     while True:
         logger.info("Running subscription checker...")
         await check_subscriptions(bot)
-        await asyncio.sleep(600)
+        await asyncio.sleep(3600)
