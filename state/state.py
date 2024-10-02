@@ -34,3 +34,11 @@ class KeyBlock(StatesGroup):
 
 class UnblockKey(StatesGroup):
     waiting_key_unblock = State()
+
+
+class BanUser(StatesGroup):
+    waiting_user_id = State()
+
+
+class UnbanUser(StatesGroup):
+    waiting_user_id = State()

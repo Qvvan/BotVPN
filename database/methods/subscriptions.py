@@ -52,7 +52,7 @@ class SubscriptionMethods:
             result = await self.session.execute(select(Subscriptions).filter_by(
                 user_id=sub.user_id,
                 vpn_key_id=sub.vpn_key_id,
-                ))
+            ))
             existing_sub = result.scalars().first()
 
             if not existing_sub:
@@ -64,6 +64,7 @@ class SubscriptionMethods:
                 existing_sub.end_date = sub.end_date
                 existing_sub.updated_at = datetime.now()
                 existing_sub.status = sub.status
+                existing_sub.reminder_sent = sub.reminder_sent
 
                 self.session.add(existing_sub)
 
@@ -93,4 +94,17 @@ class SubscriptionMethods:
             return subs
         except SQLAlchemyError as e:
             logger.error('Не удалось получить подписки', e)
+            raise
+
+    async def delete_sub(self, subscription_id: int):
+        try:
+            subscription = await self.session.get(Subscriptions, subscription_id)
+
+            if subscription:
+                await self.session.delete(subscription)
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logger.error(f"Ошибка при удалении подписки с ID {subscription_id}: {e}")
             raise

@@ -17,7 +17,7 @@ router = Router()
 async def show_commands(message: types.Message, state: FSMContext):
     await message.answer(
         text='Отправь VPN ключ и я его разблокирую',
-        reply_markup = await InlineKeyboards.cancel(),
+        reply_markup=await InlineKeyboards.cancel(),
     )
     await state.set_state(UnblockKey.waiting_key_unblock)
 
@@ -25,24 +25,42 @@ async def show_commands(message: types.Message, state: FSMContext):
 @router.message(UnblockKey.waiting_key_unblock)
 async def process_api_url(message: types.Message, state: FSMContext):
     vpn_code = message.text
+    async with DatabaseContextManager() as session_methods:
+        result = await unblock_key(vpn_code, session_methods)
+
+        if result['success']:
+            await message.answer('Ключ успешно разблокирован')
+            await session_methods.session.commit()
+        else:
+            await message.answer(result['message'])
+            await session_methods.session.rollback()
+
+    await state.clear()
+
+
+async def unblock_key(vpn_code: str, session) -> dict:
+    """
+    Разблокирует VPN ключ в базе данных и менеджере Outline.
+    :param vpn_code: код VPN ключа
+    :param session: сессия базы данных
+    :return: dict с результатом операции
+    """
     manager = OutlineManager()
     await manager.wait_for_initialization()
-    async with DatabaseContextManager() as session_methods:
-        try:
-            vpn_key_info = await session_methods.vpn_keys.get_key_id(vpn_code)
-            if not vpn_key_info:
-                await message.answer('Такого ключа нет в базе')
-            elif vpn_key_info.is_limit == 0:
-                await message.answer('Ключ уже разблокирован')
-            elif vpn_key_info:
-                await session_methods.vpn_keys.update_limit(vpn_key_id=vpn_key_info.vpn_key_id, new_limit=0)
 
-                await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
-                await session_methods.session.commit()
-                await message.answer('Ключ успешно разблокирован')
-        except Exception as e:
-            await session_methods.session.rollback()
-            await message.answer(f'Произошла ошибка при разблокировке ключа:\n{e}')
-            logger.error('Произошла ошибка при разблокировке ключа', e)
+    try:
+        vpn_key_info = await session.vpn_keys.get_key_id(vpn_code)
+        if not vpn_key_info:
+            return {'success': False, 'message': 'Такого ключа нет в базе'}
 
-        await state.clear()
+        if vpn_key_info.is_limit == 0:
+            return {'success': False, 'message': 'Ключ уже разблокирован'}
+
+        await session.vpn_keys.update_limit(vpn_key_id=vpn_key_info.vpn_key_id, new_limit=0)
+        await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
+
+        return {'success': True, 'message': 'Ключ успешно разблокирован'}
+
+    except Exception as e:
+        logger.error('Произошла ошибка при разблокировке ключа', e)
+        return {'success': False, 'message': f'Произошла ошибка при разблокировке ключа: {str(e)}'}

@@ -18,6 +18,7 @@ class Users(Base):
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
     username = Column(String)
+    ban = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -55,6 +56,7 @@ class Subscriptions(Base):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     status = Column(String, default=SubscriptionStatusEnum.ACTIVE)
+    reminder_sent = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -79,13 +81,4 @@ class Servers(Base):
     name = Column(String, nullable=False)
     api_url = Column(String, unique=True, nullable=False)
     cert_sha256 = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class Admins(Base):
-    __tablename__ = 'admins'
-
-    admin_id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
-    username = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

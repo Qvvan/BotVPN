@@ -79,6 +79,8 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
             if subs:
                 for sub in subs:
                     if sub.subscription_id == subscription_id:
+                        await callback.answer()
+                        await callback.message.delete()
                         await send_invoice_handler(message=callback.message, sub=sub)
                         break
             else:
@@ -101,7 +103,6 @@ async def new_order(callback: CallbackQuery, callback_data: SubscriptionCallback
 
 async def send_invoice_handler(message: Message, sub: Any):
     try:
-
         prices = [LabeledPrice(label="XTR", amount=sub.price)]
         await message.answer_invoice(
             title=f"VPN на {sub.name}",
@@ -148,13 +149,12 @@ async def extend_sub_successful_payment(message: Message):
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=0)
 
                         await manager.delete_key(sub.server_id, sub.outline_key_id)
-                        await message.answer(text="Спасибо что остаетесь с нами!\n"
-                                                  "Ваша подписка успешно продлена!")
+                        await message.answer(text=LEXICON_RU['subscription_renewed'])
                         await session_methods.session.commit()
                         await notify_group(
                             message=f'Пользователь: {message.from_user.username}\n'
                                     f'ID: {message.from_user.id}\n'
-                                    f'Продлил подписку на {durations_days} дней',)
+                                    f'Продлил подписку на {durations_days} дней', )
         except Exception as e:
             logger.error(f"Error during transaction processing: {e}")
             await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
