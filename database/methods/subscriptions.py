@@ -52,7 +52,7 @@ class SubscriptionMethods:
             result = await self.session.execute(select(Subscriptions).filter_by(
                 user_id=sub.user_id,
                 vpn_key_id=sub.vpn_key_id,
-                ))
+            ))
             existing_sub = result.scalars().first()
 
             if not existing_sub:

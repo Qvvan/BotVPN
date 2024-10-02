@@ -19,7 +19,6 @@ class ServiceMethods:
             logger.error(f"Ошибка получение услуги: {e}")
             return []
 
-
     async def get_service_by_id(self, service_id: int):
         try:
             result = await self.session.execute(

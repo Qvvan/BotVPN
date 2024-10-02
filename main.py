@@ -7,7 +7,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data import config
 from database.init_db import DataBase
-from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel, block_key, unblock_key
+from handlers.admin import add_server, del_key, key_info, add_key, refund, help_info, cancel, block_key, unblock_key, \
+    ban_user, unban_user
 from handlers.user import createorder, subs, start, support
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
@@ -65,11 +66,13 @@ async def main():
     # admin-handlers
     dp.include_router(add_key.router)
     dp.include_router(add_server.router)
+    dp.include_router(ban_user.router)
+    dp.include_router(block_key.router)
     dp.include_router(del_key.router)
     dp.include_router(help_info.router)
     dp.include_router(key_info.router)
     dp.include_router(refund.router)
-    dp.include_router(block_key.router)
+    dp.include_router(unban_user.router)
     dp.include_router(unblock_key.router)
 
     dp.include_router(cancel.router)
@@ -83,11 +86,14 @@ async def main():
         await bot.session.close()
 
 
-if __name__ == "__main__":
+async def run_bot():
     while True:
         try:
-            asyncio.run(main())
+            await main()
         except Exception as e:
             logger.error(f"Бот завершил работу с ошибкой: {e}")
             logger.info("Перезапуск бота через 5 секунд...")
-            asyncio.sleep(5)
+            await asyncio.sleep(5)
+
+if __name__ == "__main__":
+    asyncio.run(run_bot())

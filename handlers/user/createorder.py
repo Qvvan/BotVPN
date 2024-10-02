@@ -38,9 +38,10 @@ async def server_selected(callback_query: CallbackQuery, callback_data: ServerCa
             show_alert=True
         )
         return
-    await callback_query.message.delete()
 
-    await callback_query.message.answer(
+    await state.update_data(server_id=server_id)
+
+    await callback_query.message.edit_text(
         text=LEXICON_RU['createorder'],
         reply_markup=await InlineKeyboards.create_order_keyboards(server_id)
     )
@@ -53,9 +54,6 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
                                   state: FSMContext):
     service_id = int(callback_data.service_id)
     server_id = callback_data.server_id
-
-    await state.clear()
-
     await callback_query.message.delete()
 
     async with DatabaseContextManager() as session_methods:
@@ -70,7 +68,7 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
                                        )
         except Exception as e:
             logger.error(f'Произошла ошибка: {e}')
-            await callback_query.message.answer(text="Что-то пошло не так, обратитесь в техподдержку")
+            await callback_query.message.edit_text(text="Что-то пошло не так, обратитесь в техподдержку")
             await notify_group(
                 message=f'Пользователь: @{callback_query.message.from_user.username}\n'
                         f'ID: {callback_query.message.from_user.id}\n'
@@ -83,8 +81,25 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
 @router.callback_query(lambda c: c.data == 'back_to_servers', ChoiceServer.waiting_for_services)
 async def server_selected(callback_query: CallbackQuery, state: FSMContext):
     await state.clear()
+    await callback_query.message.edit_text(
+        text='Выберите подходящий для вас сервер.',
+        reply_markup=await InlineKeyboards.server_selection_keyboards(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    await state.set_state(ChoiceServer.waiting_for_choice)
+
+
+@router.callback_query(lambda c: c.data == 'back_to_services')
+async def back_to_services(callback_query: CallbackQuery, state: FSMContext):
+    """Возврат к выбору сервиса."""
+    data = await state.get_data()
+    server_id = data.get('server_id')
+
+    await callback_query.message.answer(
+        text=LEXICON_RU['createorder'],
+        reply_markup=await InlineKeyboards.create_order_keyboards(server_id)
+    )
     await callback_query.message.delete()
-    await create_order(callback_query.message, state)
 
 
 async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id: int,

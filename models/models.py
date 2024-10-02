@@ -82,12 +82,3 @@ class Servers(Base):
     api_url = Column(String, unique=True, nullable=False)
     cert_sha256 = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class Admins(Base):
-    __tablename__ = 'admins'
-
-    admin_id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(BigInteger, unique=True, index=True, nullable=False)
-    username = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

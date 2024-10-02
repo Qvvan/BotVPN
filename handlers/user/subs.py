@@ -125,7 +125,6 @@ async def extend_sub_successful_payment(message: Message):
             logger.info("Transaction started for adding user and service.")
             manager = OutlineManager()
             await manager.wait_for_initialization()
-            await refund_payment(message)
 
             in_payload = message.successful_payment.invoice_payload.split(':')
             service_id = int(in_payload[0])
@@ -151,8 +150,7 @@ async def extend_sub_successful_payment(message: Message):
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=0)
 
                         await manager.delete_key(sub.server_id, sub.outline_key_id)
-                        await message.answer(text="Спасибо что остаетесь с нами!\n"
-                                                  "Ваша подписка успешно продлена!")
+                        await message.answer(text=LEXICON_RU['subscription_renewed'])
                         await session_methods.session.commit()
                         await notify_group(
                             message=f'Пользователь: {message.from_user.username}\n'

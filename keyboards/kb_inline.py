@@ -59,6 +59,9 @@ class InlineKeyboards:
     async def create_pay(price) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
+        keyboard.button(text="🔙 Назад", callback_data="back_to_services")
+
+        keyboard.adjust(1)
 
         return keyboard.as_markup()
 
@@ -90,10 +93,10 @@ class InlineKeyboards:
         )
 
         # Добавляем кнопки в отдельные строки
-        keyboard.row(support_button)          # Первая строка
-        keyboard.row(vpn_issue_button)        # Вторая строка
-        keyboard.row(low_speed_button)        # Третья строка
-        keyboard.row(install_guide_button)    # Четвертая строка
+        keyboard.row(support_button)  # Первая строка
+        keyboard.row(vpn_issue_button)  # Вторая строка
+        keyboard.row(low_speed_button)  # Третья строка
+        keyboard.row(install_guide_button)  # Четвертая строка
 
         return keyboard.as_markup()
 
@@ -109,7 +112,8 @@ class InlineKeyboards:
         keyboard = InlineKeyboardBuilder()
         manager = OutlineManager()
         await manager.wait_for_initialization()
-        servers = await manager.list_servers()
+        if manager:
+            servers = await manager.list_servers()
 
         async with DatabaseContextManager() as session_methods:
             try:
@@ -166,4 +170,17 @@ class InlineKeyboards:
                     subscription_id=subscription_id
                 ).pack()),
         )
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def get_back_button_keyboard() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        back_button = InlineKeyboardButton(
+            text="🔙 Назад",
+            callback_data="back_to_support_menu"
+        )
+
+        keyboard.add(back_button)
+
         return keyboard.as_markup()

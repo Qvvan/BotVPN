@@ -8,7 +8,7 @@ from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
 from logger.logging_config import logger
 from outline.outline_manager.outline_manager import OutlineManager
-from state.state import DeleteKey, KeyBlock
+from state.state import KeyBlock
 
 router = Router()
 
@@ -17,7 +17,7 @@ router = Router()
 async def show_commands(message: types.Message, state: FSMContext):
     await message.answer(
         text='Отправь VPN ключ и я его заблокирую',
-        reply_markup = await InlineKeyboards.cancel(),
+        reply_markup=await InlineKeyboards.cancel(),
     )
     await state.set_state(KeyBlock.waiting_key_block)
 
@@ -65,4 +65,3 @@ async def block_key(vpn_code: str, session) -> dict:
     except Exception as e:
         logger.error('Произошла ошибка при блокировке ключа', e)
         return {'success': False, 'message': f'Произошла ошибка при блокировке ключа: {str(e)}'}
-

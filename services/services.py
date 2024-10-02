@@ -9,8 +9,7 @@ from services.send_sms_admins import notify_group
 
 
 async def process_successful_payment(message):
-    await message.answer(text="Спасибо за покупку!")
-    await refund_payment(message)
+    await message.answer(text=LEXICON_RU['purchase_thank_you'])
 
     async with DatabaseContextManager() as session_methods:
         try:

@@ -56,7 +56,6 @@ class ServerMethods:
             logger.error(f"SQLAlchemy error when adding server: {e}")
             return False
 
-
     async def get_all_servers(self):
         """
         Получает список всех серверов из базы данных.
@@ -68,7 +67,6 @@ class ServerMethods:
         except SQLAlchemyError as e:
             logger.error(f"Error fetching servers from the database: {e}")
             return []
-
 
     async def get_server_by_vpn_key_id(self, vpn_key_id: str):
         try:

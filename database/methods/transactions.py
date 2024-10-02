@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from config_data.config import CRYPTO_KEY
+from logger.logging_config import logger
 from models.models import Transactions
 
 
@@ -32,7 +33,7 @@ class TransactionMethods:
             self.session.add(transaction)
             return transaction
         except SQLAlchemyError as e:
-            print(f"Error adding transaction: {e}")
+            logger.error(f"Error adding transaction: {e}")
             return None
 
     async def cancel_transaction(self, encrypted_transaction_code: str):
@@ -50,8 +51,8 @@ class TransactionMethods:
                 return user_id, decrypted_transaction_id
             return None, None
         except SQLAlchemyError as e:
-            print(f"Error canceling transaction: {e}")
+            logger.error(f"Error canceling transaction: {e}")
             return None, None
         except (base64.binascii.Error, ValueError) as e:
-            print(f"Error decoding/encrypting transaction code: {e}")
+            logger.error(f"Error decoding/encrypting transaction code: {e}")
             return None, None

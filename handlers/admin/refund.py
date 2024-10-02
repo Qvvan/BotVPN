@@ -59,4 +59,3 @@ async def cancel_transaction(transaction_code: str, session, bot) -> dict:
     except Exception as e:
         logger.error('Не удалось отменить транзакцию', e)
         return {'success': False, 'message': f"Не удалось отменить транзакцию, ошибка:\n{str(e)}"}
-

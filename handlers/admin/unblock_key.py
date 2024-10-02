@@ -17,7 +17,7 @@ router = Router()
 async def show_commands(message: types.Message, state: FSMContext):
     await message.answer(
         text='Отправь VPN ключ и я его разблокирую',
-        reply_markup = await InlineKeyboards.cancel(),
+        reply_markup=await InlineKeyboards.cancel(),
     )
     await state.set_state(UnblockKey.waiting_key_unblock)
 
@@ -64,4 +64,3 @@ async def unblock_key(vpn_code: str, session) -> dict:
     except Exception as e:
         logger.error('Произошла ошибка при разблокировке ключа', e)
         return {'success': False, 'message': f'Произошла ошибка при разблокировке ключа: {str(e)}'}
-
