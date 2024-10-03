@@ -10,7 +10,6 @@ load_dotenv('../.env')
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 BACKUP_PATH = os.getenv("BACKUP_PATH")
 
@@ -21,17 +20,18 @@ BACKUP_GROUP_ID = os.getenv('BACKUP_GROUP_ID')
 
 # Создаем бэкап
 def create_backup():
-    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_file = f"{BACKUP_PATH}/backup_{date_str}.sql"
-    command = f"pg_dump -U {DB_USER} -h {DB_HOST} -p {DB_PORT} {DB_NAME} > {backup_file}"
+    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    backup_file = f"{BACKUP_PATH}/backup_{date_str}.dump.gz"
 
-    # Установка переменной окружения для PostgreSQL пароля
-    env = {key: str(value) for key, value in os.environ.items()}
-    env['PGPASSWORD'] = str(DB_PASSWORD)
+    # Команда для выполнения резервного копирования через Docker
+    command = (
+        f"docker exec -e PGPASSWORD={DB_PASSWORD} "
+        f"{DB_HOST} pg_dump -F c -U {DB_USER} -h localhost -d {DB_NAME} | gzip > {backup_file}"
+    )
 
     try:
-        # Выполняем команду pg_dump
-        subprocess.run(command, shell=True, check=True, env=env)
+        # Выполняем команду резервного копирования
+        subprocess.run(command, shell=True, check=True)
         return backup_file
     except subprocess.CalledProcessError as e:
         print(f"Backup command failed: {e}")
