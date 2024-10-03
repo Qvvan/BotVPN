@@ -4,8 +4,8 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из файла .env
-load_dotenv('../.env')
+
+load_dotenv('/srv/BotVPN/.env')
 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
