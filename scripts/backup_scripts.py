@@ -10,6 +10,7 @@ load_dotenv('../.env')
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 BACKUP_PATH = os.getenv("BACKUP_PATH")
 
@@ -22,7 +23,7 @@ BACKUP_GROUP_ID = os.getenv('BACKUP_GROUP_ID')
 def create_backup():
     date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     backup_file = f"{BACKUP_PATH}/backup_{date_str}.sql"
-    command = f"pg_dump -U {DB_USER} -h {DB_HOST} {DB_NAME} > {backup_file}"
+    command = f"pg_dump -U {DB_USER} -h {DB_HOST} -p {DB_PORT} {DB_NAME} > {backup_file}"
 
     # Установка переменной окружения для PostgreSQL пароля
     env = {key: str(value) for key, value in os.environ.items()}
