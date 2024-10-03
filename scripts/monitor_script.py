@@ -48,6 +48,8 @@ def check_system():
     if messages:
         message = '\n'.join(messages)
         send_message(message)
+    else:
+        os.system('echo Все нормально!')
 
 
 if __name__ == "__main__":
