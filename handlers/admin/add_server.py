@@ -41,6 +41,9 @@ async def process_cert_sha256(message: types.Message, state: FSMContext):
         server_info = client.get_server_information()
     except Exception as e:
         await message.answer(f"Ошибка при соединении с сервером:\n{e}")
+        await state.clear()
+        return
+
     SERVER = {
         "SERVER_ID": server_info['serverId'],
         "NAME": server_info['name'],
