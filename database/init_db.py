@@ -11,7 +11,11 @@ class DataBase:
     def __init__(self):
         self.connect = DSN
 
-        self.async_engine = create_async_engine(self.connect)
+        self.async_engine = create_async_engine(
+            self.connect,
+            isolation_level="SERIALIZABLE",
+            pool_timeout=30,
+        )
         self.Session = async_sessionmaker(bind=self.async_engine, class_=AsyncSession)
 
     async def create_db(self):
