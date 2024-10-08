@@ -12,53 +12,52 @@ async def process_successful_payment(message):
     await message.answer(text=LEXICON_RU['purchase_thank_you'])
 
     async with DatabaseContextManager() as session_methods:
-        try:
-            logger.info("Transaction started for adding user and service.")
-            manager = OutlineManager()
-            await manager.wait_for_initialization()
-            in_payload = message.successful_payment.invoice_payload.split(':')
-            server_id = message.successful_payment.invoice_payload.split(':')[2]
-            durations_days = in_payload[1]
+        async with session_methods.session.begin():
+            try:
+                logger.info("Transaction started for adding user and service.")
+                manager = OutlineManager()
+                await manager.wait_for_initialization()
+                in_payload = message.successful_payment.invoice_payload.split(':')
+                server_id = message.successful_payment.invoice_payload.split(':')[2]
+                durations_days = in_payload[1]
 
-            transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
-            if not transaction_state:
-                raise Exception("Ошибка сохранения транзакции")
+                transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
+                if not transaction_state:
+                    raise Exception("Ошибка сохранения транзакции")
 
-            vpn_key = await session_methods.vpn_keys.get_vpn_key()
-            if not vpn_key:
-                raise Exception("Нет доступных ключей")
+                vpn_key = await session_methods.vpn_keys.get_vpn_key()
+                if not vpn_key:
+                    raise Exception("Нет доступных ключей")
 
-            await update_vpn_key(vpn_key.vpn_key_id, session_methods)
-            subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
+                await update_vpn_key(vpn_key.vpn_key_id, session_methods)
+                subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
 
-            if not subscription_created:
-                raise Exception("Ошибка создания подписки")
+                if not subscription_created:
+                    raise Exception("Ошибка создания подписки")
 
-            await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
-            await send_success_response(message, vpn_key.key)
-            await session_methods.session.commit()
-            await notify_group(
-                message=f'Пользователь: @{message.from_user.username}\n'
-                        f'ID: {message.from_user.id}\n'
-                        f'Оформил новую подписку: {durations_days} дней\n'
-                        f'#подписка'
-            )
+                await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
+                await send_success_response(message, vpn_key.key)
+                await session_methods.session.commit()
+                await notify_group(
+                    message=f'Пользователь: @{message.from_user.username}\n'
+                            f'ID: {message.from_user.id}\n'
+                            f'Оформил новую подписку: {durations_days} дней\n'
+                            f'#подписка'
+                )
 
-        except Exception as e:
-            logger.error(f"Error during transaction processing: {e}")
-            await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
-            await refund_payment(message)
+            except Exception as e:
+                logger.error(f"Error during transaction processing: {e}")
+                await message.answer(text=f"К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
+                await refund_payment(message)
 
-            await session_methods.session.rollback()
+                await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
 
-            await create_transaction(message, status='отмена', description=str(e), session_methods=session_methods)
-            await session_methods.session.commit()
-            await notify_group(
-                message=f'Пользователь: @{message.from_user.username}\n'
-                        f'ID: {message.from_user.id}\n'
-                        f'Пытался оформить подписку:\n{e}\n\n'
-                        f'#подписка'
-            )
+                await notify_group(
+                    message=f'Пользователь: @{message.from_user.username}\n'
+                            f'ID: {message.from_user.id}\n'
+                            f'Пытался оформить подписку:\n{e}\n\n'
+                            f'#подписка'
+                )
 
 
 async def create_transaction(message, status, description: str, session_methods) -> Transactions:
