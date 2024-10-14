@@ -13,3 +13,10 @@ BOT_TOKEN = env.str("BOT_TOKEN")
 
 ERROR_GROUP_ID = env.int("ERROR_GROUP_ID")
 INFO_GROUP_ID = env.int("INFO_GROUP_ID")
+
+REDIS_HOST = env.str("REDIS_HOST", "localhost")
+REDIS_PORT = env.int("REDIS_PORT", 6379)
+REDIS_DB = env.int("REDIS_DB", 0)
+
+OUTLINE_USERS_GATEWAY = 'ssconf://speed-of-light.ru'
+OUTLINE_SALT = 'ZBKufSbyukFASny8oAFn078fN3'

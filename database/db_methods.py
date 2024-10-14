@@ -1,4 +1,4 @@
-from database.methods import vpn_keys, users, transactions, subscriptions, services, server
+from database.methods import services, users, subscriptions, vpn_keys, server, transactions
 
 
 class MethodsManager:

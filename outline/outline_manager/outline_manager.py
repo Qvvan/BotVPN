@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import re
 
 from outline_vpn.outline_vpn import OutlineVPN
 
@@ -54,9 +56,9 @@ class OutlineManager:
                 return server_id
         return None
 
-    async def create_key(self, server_id: str):
+    async def create_key(self, server_id: str, user_id: str):
         if server_id in self.clients:
-            return self.clients[server_id].create_key(name='Свободый')
+            return self.clients[server_id].create_key(name='Свободый', key_id=user_id)
         raise ValueError(f"Server ID {server_id} not found.")
 
     async def delete_key(self, server_id: str, key_id: str):
@@ -78,3 +80,24 @@ class OutlineManager:
         if server_id in self.clients:
             return self.clients[server_id].add_data_limit(key_id, 0)
         raise ValueError(f"Server ID {server_id} not found.")
+
+    async def decrypt_key(self, key: str) -> dict:
+        match = re.search(r'@(.*?):(\d+)', key)
+        if not match:
+            raise ValueError("Unable to extract server and port")
+
+        server = match.group(1)
+        server_port = int(match.group(2))
+
+        encoded_part = key.split("ss://")[1].split('@')[0]
+
+        decoded_part = base64.b64decode(encoded_part).decode('utf-8')
+
+        method, password = decoded_part.split(':', 1)
+
+        return {
+            "server": server,
+            "server_port": server_port,
+            "password": password,
+            "method": method,
+        }

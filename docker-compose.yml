@@ -30,6 +30,21 @@ services:
     networks:
       - bot-network
 
+  fastapi:
+    build:
+      context: ./server  # Убедитесь, что контекст сборки установлен на папку server
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:80"  # Порт для доступа к приложению
+    volumes:
+      - ./server:/app  # Монтируем папку server в /app контейнера
+    env_file:
+      - .env
+    networks:
+      - bot-network
+
 volumes:
   postgres_data:
 

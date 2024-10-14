@@ -52,7 +52,7 @@ class Subscriptions(Base):
     subscription_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)
     service_id = Column(Integer, nullable=False)
-    vpn_key_id = Column(Integer, nullable=False)
+    dynamic_key = Column(String, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     status = Column(String, default=SubscriptionStatusEnum.ACTIVE)

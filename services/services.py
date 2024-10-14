@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 
+from config_data.config import OUTLINE_USERS_GATEWAY, OUTLINE_SALT
 from database.context_manager import DatabaseContextManager
 from lexicon.lexicon_ru import LEXICON_RU
 from main import logger
 from models.models import Transactions, Subscriptions, VPNKeys
 from outline.outline_manager.outline_manager import OutlineManager
+from services.crypto import encrypt_part
 from services.send_sms_admins import notify_group
 
 
@@ -17,25 +19,23 @@ async def process_successful_payment(message):
             manager = OutlineManager()
             await manager.wait_for_initialization()
             in_payload = message.successful_payment.invoice_payload.split(':')
-            server_id = message.successful_payment.invoice_payload.split(':')[2]
+            server_id = in_payload[2]
             durations_days = in_payload[1]
+            user_id = message.from_user.id
 
             transaction_state = await create_transaction(message, 'successful', 'successful', session_methods)
             if not transaction_state:
                 raise Exception("Ошибка сохранения транзакции")
 
-            vpn_key = await session_methods.vpn_keys.get_vpn_key()
-            if not vpn_key:
-                raise Exception("Нет доступных ключей")
+            part_to_encrypt = f"{OUTLINE_SALT}{hex(int(user_id))[2:]}?server_id={server_id}"
+            encrypted_part = encrypt_part(part_to_encrypt)
+            dynamic_key = f"{OUTLINE_USERS_GATEWAY}/access-key/{encrypted_part}#VPN"
 
-            await update_vpn_key(vpn_key.vpn_key_id, session_methods)
-            subscription_created = await create_subscription(message, vpn_key.vpn_key_id, session_methods)
-
+            subscription_created = await create_subscription(message, dynamic_key, session_methods)
             if not subscription_created:
                 raise Exception("Ошибка создания подписки")
 
-            await manager.rename_key(server_id, vpn_key.outline_key_id, message.from_user.id)
-            await send_success_response(message, vpn_key.key)
+            await send_success_response(message, dynamic_key)
             await session_methods.session.commit()
             await notify_group(
                 message=f'Пользователь: @{message.from_user.username}\n'
@@ -91,7 +91,7 @@ async def update_vpn_key(vpn_key_id: int, session_methods):
     await session_methods.vpn_keys.update_vpn_key(vpn_key)
 
 
-async def create_subscription(message, vpn_key_id: int, session_methods) -> bool:
+async def create_subscription(message, dynamic_key: str, session_methods) -> bool:
     in_payload = message.successful_payment.invoice_payload.split(':')
     service_id = int(in_payload[0])
     durations_days = in_payload[1]
@@ -99,7 +99,7 @@ async def create_subscription(message, vpn_key_id: int, session_methods) -> bool
     return await session_methods.subscription.create_sub(Subscriptions(
         user_id=message.from_user.id,
         service_id=service_id,
-        vpn_key_id=vpn_key_id,
+        dynamic_key=dynamic_key,
         start_date=datetime.now(),
         end_date=datetime.now() + timedelta(days=int(durations_days)),
     ))
