@@ -1,37 +1,38 @@
-from fastapi import FastAPI, HTTPException
+from cryptography.fernet import Fernet
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from config_data.config import OUTLINE_SALT
-from database.context_manager import DatabaseContextManager
-from logger.logging_config import logger
-from outline.outline_manager.outline_manager import OutlineManager
-from services.crypto import decrypt_part
+from cfg.config import OUTLINE_SALT, CRYPTO_KEY
+from db import methods
+from db.database import get_db
+
+cipher = Fernet(CRYPTO_KEY)
 
 app = FastAPI()
 
 
+async def decrypt_part(encrypted_data: str) -> str:
+    """Дешифровывает данные."""
+    decrypted_data = cipher.decrypt(encrypted_data.encode())
+    return decrypted_data.decode('utf-8')
+
+
 @app.get('/access-key/{encrypted_part}')
-async def get_key(encrypted_part: str):
-    manager = OutlineManager()
-    async with DatabaseContextManager() as session_methods:
-        try:
-            decrypted_key = decrypt_part(encrypted_part)
+async def get_key(encrypted_part: str, db: Session = Depends(get_db)):
+    try:
+        decrypted_key = await decrypt_part(encrypted_part)
 
-            decrypted_salt_and_user, server_id = decrypted_key.split("?server_id=")
+        if not decrypted_key.startswith(OUTLINE_SALT):
+            return HTTPException(status_code=400, detail="Invalid requests")
 
-            if not decrypted_salt_and_user.startswith(OUTLINE_SALT):
-                raise ValueError("Invalid salt in the decrypted key")
+        hex_id = decrypted_key[len(OUTLINE_SALT):]
+        user_id = int(hex_id, 16)
+    except:
+        return HTTPException(status_code=404, detail="User not found")
 
-            hex_id = decrypted_salt_and_user[len(OUTLINE_SALT):]
-            user_id = str(int(hex_id, 16))
+    sub = await methods.get_subscription(db, user_id)
+    if not sub:
+        return HTTPException(status_code=404, detail="User not found")
 
-            sub = await session_methods.subscription.get_subscription(user_id)
-            if sub:
-                await manager.delete_key(server_id=server_id, key_id=user_id)
-
-                new_key = await manager.create_key(server_id=server_id, user_id=user_id)
-                decrypt_key = manager.decrypt_key(new_key)
-
-                return decrypt_key
-            return HTTPException(status_code=404, detail="User not found")
-        except Exception as e:
-            logger.error('Произошла ошибка при получение ключа', e)
+    servers = await methods.get_servers(db)
+    return {"subscription": sub, "servers": servers}

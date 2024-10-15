@@ -19,7 +19,6 @@ async def process_successful_payment(message):
             manager = OutlineManager()
             await manager.wait_for_initialization()
             in_payload = message.successful_payment.invoice_payload.split(':')
-            server_id = in_payload[2]
             durations_days = in_payload[1]
             user_id = message.from_user.id
 
@@ -27,7 +26,7 @@ async def process_successful_payment(message):
             if not transaction_state:
                 raise Exception("Ошибка сохранения транзакции")
 
-            part_to_encrypt = f"{OUTLINE_SALT}{hex(int(user_id))[2:]}?server_id={server_id}"
+            part_to_encrypt = f"{OUTLINE_SALT}{hex(int(user_id))[2:]}"
             encrypted_part = encrypt_part(part_to_encrypt)
             dynamic_key = f"{OUTLINE_USERS_GATEWAY}/access-key/{encrypted_part}#VPN"
 
@@ -81,14 +80,6 @@ async def create_transaction(message, status, description: str, session_methods)
 
 async def refund_payment(message):
     await message.bot.refund_star_payment(message.from_user.id, message.successful_payment.telegram_payment_charge_id)
-
-
-async def update_vpn_key(vpn_key_id: int, session_methods):
-    vpn_key = VPNKeys(
-        vpn_key_id=vpn_key_id,
-        is_active=1,
-    )
-    await session_methods.vpn_keys.update_vpn_key(vpn_key)
 
 
 async def create_subscription(message, dynamic_key: str, session_methods) -> bool:

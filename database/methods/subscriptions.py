@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from logger.logging_config import logger
-from models.models import Subscriptions, VPNKeys, Services
+from models.models import Subscriptions, Services
 
 
 class SubscriptionMethods:
@@ -14,25 +14,17 @@ class SubscriptionMethods:
 
     async def get_subscription(self, user_id):
         try:
-            # Запрос с правильными join
             query = (
                 select(
                     Subscriptions.start_date,
                     Subscriptions.end_date,
-                    VPNKeys.key,
-                    VPNKeys.server_name,
                     Services.name,
                     Subscriptions.status,
                     Subscriptions.subscription_id,
                     Services.duration_days,
                     Services.price,
                     Services.service_id,
-                    VPNKeys.server_id,
-                    VPNKeys.issued_at,
-                    VPNKeys.outline_key_id,
-                    VPNKeys.vpn_key_id,
                 ).select_from(Subscriptions)
-                .join(VPNKeys, Subscriptions.vpn_key_id == VPNKeys.vpn_key_id)
                 .join(Services, Subscriptions.service_id == Services.service_id)
                 .filter(Subscriptions.user_id == user_id)
             )
@@ -51,7 +43,7 @@ class SubscriptionMethods:
         try:
             result = await self.session.execute(select(Subscriptions).filter_by(
                 user_id=sub.user_id,
-                vpn_key_id=sub.vpn_key_id,
+                dynamic_key=sub.dynamic_key,
             ))
             existing_sub = result.scalars().first()
 
@@ -59,7 +51,7 @@ class SubscriptionMethods:
                 await self.create_sub(sub)
             else:
                 existing_sub.service_id = sub.service_id
-                existing_sub.vpn_key_id = sub.vpn_key_id
+                existing_sub.dynamic_key = sub.dynamic_key
                 existing_sub.start_date = sub.start_date
                 existing_sub.end_date = sub.end_date
                 existing_sub.updated_at = datetime.now()

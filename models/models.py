@@ -31,21 +31,6 @@ class Services(Base):
     price = Column(Integer, nullable=False)
 
 
-class VPNKeys(Base):
-    __tablename__ = 'vpn_keys'
-
-    vpn_key_id = Column(Integer, primary_key=True, autoincrement=True)
-    outline_key_id = Column(String, nullable=False)
-    server_id = Column(String, nullable=False)
-    key = Column(String, unique=True, nullable=False)
-    server_name = Column(String, nullable=False)
-    issued_at = Column(DateTime, default=None)
-    is_active = Column(Integer, default=False)
-    is_limit = Column(Integer, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
 class Subscriptions(Base):
     __tablename__ = 'subscriptions'
 

@@ -11,7 +11,4 @@ def encrypt_part(data: str) -> str:
     return encrypted_data.decode('utf-8')
 
 
-def decrypt_part(encrypted_data: str) -> str:
-    """Дешифровывает данные."""
-    decrypted_data = cipher.decrypt(encrypted_data.encode())
-    return decrypted_data.decode('utf-8')
+

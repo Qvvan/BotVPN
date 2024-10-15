@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery, PreCheckoutQuery, LabeledPrice
 
 from database.context_manager import DatabaseContextManager
 from handlers.user.subs import extend_sub_successful_payment, new_order_successful_payment
-from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory, ServerCallbackFactory
+from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from services.send_sms_admins import notify_group
@@ -19,41 +19,16 @@ router = Router()
 @router.message(Command(commands='createorder'))
 async def create_order(message: Message, state: FSMContext):
     await message.answer(
-        text='Выберите подходящий для вас сервер.',
-        reply_markup=await InlineKeyboards.server_selection_keyboards(),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    await state.set_state(ChoiceServer.waiting_for_choice)
-
-
-@router.callback_query(ServerCallbackFactory.filter(), ChoiceServer.waiting_for_choice)
-async def server_selected(callback_query: CallbackQuery, callback_data: ServerCallbackFactory, state: FSMContext):
-    """Обрабатываем выбор сервера и создаем ключ."""
-    server_id = callback_data.server_id
-    count_key = callback_data.available_keys
-    if count_key == 0:
-        await callback_query.answer(
-            text='К сожалению, на данном сервере нет доступных ключей.\n'
-                 'Пожалуйста, выбери другой сервер или обратись в техподдержку для получения помощи.',
-            show_alert=True
-        )
-        return
-
-    await state.update_data(server_id=server_id)
-
-    await callback_query.message.edit_text(
         text=LEXICON_RU['createorder'],
-        reply_markup=await InlineKeyboards.create_order_keyboards(server_id)
+        reply_markup=await InlineKeyboards.create_order_keyboards()
     )
 
     await state.set_state(ChoiceServer.waiting_for_services)
 
 
 @router.callback_query(ServiceCallbackFactory.filter(), ChoiceServer.waiting_for_services)
-async def handle_service_callback(callback_query: CallbackQuery, callback_data: ServiceCallbackFactory,
-                                  state: FSMContext):
+async def handle_service_callback(callback_query: CallbackQuery, callback_data: ServiceCallbackFactory):
     service_id = int(callback_data.service_id)
-    server_id = callback_data.server_id
     await callback_query.message.delete()
 
     async with DatabaseContextManager() as session_methods:
@@ -63,8 +38,7 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
                                        price_service=service.price,
                                        service_name=service.name,
                                        service_id=service_id,
-                                       duration_days=service.duration_days,
-                                       server_id=server_id
+                                       duration_days=service.duration_days
                                        )
         except Exception as e:
             logger.error(f'Произошла ошибка: {e}')
@@ -97,14 +71,13 @@ async def back_to_services(callback_query: CallbackQuery, state: FSMContext):
 
     await callback_query.message.answer(
         text=LEXICON_RU['createorder'],
-        reply_markup=await InlineKeyboards.create_order_keyboards(server_id)
+        reply_markup=await InlineKeyboards.create_order_keyboards()
     )
     await callback_query.message.delete()
 
 
 async def send_invoice_handler(message: Message, price_service: int, service_name: str, service_id: int,
-                               duration_days: int,
-                               server_id: str):
+                               duration_days: int,):
     try:
         prices = [LabeledPrice(label="XTR", amount=price_service)]
         await message.answer_invoice(
@@ -113,7 +86,7 @@ async def send_invoice_handler(message: Message, price_service: int, service_nam
                         f"⬇️ После успешной оплаты, тебе будут высланы данные и инструкция для подключения VPN. 😎",
             prices=prices,
             provider_token="",
-            payload=f"{service_id}:{duration_days}:{server_id}:new",
+            payload=f"{service_id}:{duration_days}:new",
             currency="XTR",
             reply_markup=await InlineKeyboards.create_pay(price_service),
         )
@@ -130,7 +103,7 @@ async def pre_checkout_query(query: PreCheckoutQuery):
 @router.message(F.successful_payment)
 async def successful_payment(message: Message):
     payload = message.successful_payment.invoice_payload
-    service_id, duration_days, server_id, action = payload.split(':')
+    service_id, duration_days, action = payload.split(':')
     if action == 'new':
         await process_successful_payment(message)
     elif action == 'old':

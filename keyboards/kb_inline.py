@@ -11,11 +11,9 @@ from outline.outline_manager.outline_manager import OutlineManager
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
-    server_id: str
 
 
 class ServerCallbackFactory(CallbackData, prefix='select_server'):
-    server_id: str
     available_keys: int
 
 
@@ -26,34 +24,33 @@ class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
 
 class InlineKeyboards:
     @staticmethod
-    async def create_order_keyboards(server_id) -> InlineKeyboardMarkup:
+    async def create_order_keyboards() -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
-        db = DataBase()
-        async with db.Session() as session:
-            session_methods = MethodsManager(session)
-            services = await session_methods.services.get_services()
-            keyboard = InlineKeyboardBuilder()
+        async with DatabaseContextManager() as session_methods:
+            try:
+                keyboard = InlineKeyboardBuilder()
+                services = await session_methods.services.get_services()
+                buttons: list[InlineKeyboardButton] = []
 
-            buttons: list[InlineKeyboardButton] = []
+                for service in services:
+                    service_id = str(service.service_id)
+                    service_name = service.name
 
-            for service in services:
-                service_id = str(service.service_id)
-                service_name = service.name
+                    callback_data = ServiceCallbackFactory(
+                        service_id=service_id,
+                    ).pack()
 
-                callback_data = ServiceCallbackFactory(
-                    service_id=service_id,
-                    server_id=server_id
-                ).pack()
+                    buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
+                keyboard.row(*buttons)
 
-                buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
-            keyboard.row(*buttons)
+                keyboard.row(
+                    InlineKeyboardButton(text='Назад', callback_data='back_to_servers'),
+                    InlineKeyboardButton(text='Отмена', callback_data='cancel')
+                )
 
-            keyboard.row(
-                InlineKeyboardButton(text='Назад', callback_data='back_to_servers'),
-                InlineKeyboardButton(text='Отмена', callback_data='cancel')
-            )
-
-            return keyboard.as_markup()
+                return keyboard.as_markup()
+            except Exception as e:
+                logger.error('Произошла ошибка при формирование услуг', e)
 
     @staticmethod
     async def create_pay(price) -> InlineKeyboardMarkup:
