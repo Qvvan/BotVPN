@@ -18,6 +18,7 @@ class SubscriptionMethods:
                 select(
                     Subscriptions.start_date,
                     Subscriptions.end_date,
+                    Subscriptions.dynamic_key,
                     Services.name,
                     Subscriptions.status,
                     Subscriptions.subscription_id,

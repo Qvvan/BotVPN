@@ -30,21 +30,6 @@ services:
     networks:
       - bot-network
 
-  fastapi:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: fastapi_app
-    restart: always
-    ports:
-      - "12345:12345"
-    volumes:
-      - ./server:/app
-    env_file:
-      - .env
-    networks:
-      - bot-network
-
 volumes:
   postgres_data:
 

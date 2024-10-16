@@ -4,7 +4,7 @@ from config_data.config import OUTLINE_USERS_GATEWAY, OUTLINE_SALT
 from database.context_manager import DatabaseContextManager
 from lexicon.lexicon_ru import LEXICON_RU
 from main import logger
-from models.models import Transactions, Subscriptions, VPNKeys
+from models.models import Transactions, Subscriptions
 from outline.outline_manager.outline_manager import OutlineManager
 from services.crypto import encrypt_part
 from services.send_sms_admins import notify_group
@@ -98,4 +98,7 @@ async def create_subscription(message, dynamic_key: str, session_methods) -> boo
 
 async def send_success_response(message, vpn_key: str):
     await message.answer(text=LEXICON_RU['outline_info'])
-    await message.answer(text=f'Ваш ключ: {vpn_key}')
+    await message.answer(
+        text=f'Ваш ключ:\n<pre>{vpn_key}</pre>',
+        parse_mode="HTML",
+        )

@@ -3,18 +3,11 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.context_manager import DatabaseContextManager
-from database.db_methods import MethodsManager
-from database.init_db import DataBase
 from logger.logging_config import logger
-from outline.outline_manager.outline_manager import OutlineManager
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
-
-
-class ServerCallbackFactory(CallbackData, prefix='select_server'):
-    available_keys: int
 
 
 class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
@@ -44,7 +37,6 @@ class InlineKeyboards:
                 keyboard.row(*buttons)
 
                 keyboard.row(
-                    InlineKeyboardButton(text='Назад', callback_data='back_to_servers'),
                     InlineKeyboardButton(text='Отмена', callback_data='cancel')
                 )
 
@@ -89,11 +81,10 @@ class InlineKeyboards:
             callback_data="install_guide"
         )
 
-        # Добавляем кнопки в отдельные строки
-        keyboard.row(support_button)  # Первая строка
-        keyboard.row(vpn_issue_button)  # Вторая строка
-        keyboard.row(low_speed_button)  # Третья строка
-        keyboard.row(install_guide_button)  # Четвертая строка
+        keyboard.row(support_button)
+        keyboard.row(vpn_issue_button)
+        keyboard.row(low_speed_button)
+        keyboard.row(install_guide_button)
 
         return keyboard.as_markup()
 
@@ -101,40 +92,6 @@ class InlineKeyboards:
     async def cancel() -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
-        return keyboard.as_markup()
-
-    @staticmethod
-    async def server_selection_keyboards(not_show_server: bool = True) -> InlineKeyboardMarkup:
-        """Клавиатура для выбора серверов."""
-        keyboard = InlineKeyboardBuilder()
-        manager = OutlineManager()
-        await manager.wait_for_initialization()
-        if manager:
-            servers = await manager.list_servers()
-
-        async with DatabaseContextManager() as session_methods:
-            try:
-                keys = await session_methods.vpn_keys.get_keys()
-            except Exception as e:
-                logger.error(f'Ошибка при получении ключей: {e}')
-                raise
-
-        count_server_keys = {}
-        for obj in keys:
-            if obj.server_name not in count_server_keys:
-                count_server_keys[obj.server_name] = 0
-            count_server_keys[obj.server_name] += 1
-
-        for server_id, server_name in servers.items():
-            n = count_server_keys.get(server_name, 0)
-            if n == 0 and not_show_server:
-                continue
-            callback_data = f"select_server:{server_id}:{n}"
-            keyboard.add(InlineKeyboardButton(text=f"{server_name}\nДоступно: {n} ключей", callback_data=callback_data))
-
-        keyboard.add(InlineKeyboardButton(text='Отмена', callback_data='cancel'))
-        keyboard.adjust(1)
-
         return keyboard.as_markup()
 
     @staticmethod

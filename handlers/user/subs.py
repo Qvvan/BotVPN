@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -28,28 +29,29 @@ async def get_user_subs(message: Message):
             for data in subscription_data:
                 start_date = data.start_date
                 end_date = data.end_date
-                vpn_key = data.key
-                server_name = data.server_name
+                dynamic_key = data.dynamic_key
                 service_name = data.name
                 status = data.status
+
 
                 parseSubs = (
                     f"📶 Статус: {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
                     f"💼 Услуга: {service_name}\n\n"
                     f"📆 Дата начала: {start_date.strftime('%Y-%m-%d')}\n"
                     f"📆 Дата окончания: {end_date.strftime('%Y-%m-%d')}\n\n"
-                    f"Страна: {server_name}\n"
-                    f"🔑 Ключ: {vpn_key}"
+                    f"🔑 Ключ:\n"
+                    f"<pre>{dynamic_key}</pre>"
                 )
 
                 if status == 'истекла':
                     keyboard = await InlineKeyboards.extend_subscription(data.subscription_id)
                     await message.answer(
-                        text=parseSubs + "\n\n🔄 Ваша подписка истекла. Хотите продлить?",
-                        reply_markup=keyboard
+                        text=parseSubs,
+                        reply_markup=keyboard,
+                        parse_mode="HTML"
                     )
                 else:
-                    await message.answer(text=parseSubs)
+                    await message.answer(text=parseSubs, parse_mode="HTML")
 
         except Exception as e:
             logger.error('Ошибка при получении подписок', e)
@@ -148,7 +150,6 @@ async def extend_sub_successful_payment(message: Message):
                         ))
                         await session_methods.vpn_keys.update_limit(vpn_key_id=sub.vpn_key_id, new_limit=0)
 
-                        await manager.delete_key(sub.server_id, sub.outline_key_id)
                         await message.answer(text=LEXICON_RU['subscription_renewed'])
                         await session_methods.session.commit()
                         await notify_group(

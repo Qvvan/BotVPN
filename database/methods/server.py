@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from logger.logging_config import logger
-from models.models import Servers, VPNKeys, Subscriptions
+from models.models import Servers
 
 
 class ServerMethods:
@@ -48,7 +48,7 @@ class ServerMethods:
                 return False
 
         except IntegrityError as e:
-            await self.session.rollback()  # Откатываем транзакцию в случае ошибки
+            await self.session.rollback()
             logger.error(f"Integrity error when adding server: {e}")
             return False
         except SQLAlchemyError as e:
@@ -67,26 +67,3 @@ class ServerMethods:
         except SQLAlchemyError as e:
             logger.error(f"Error fetching servers from the database: {e}")
             return []
-
-    # async def get_server_by_vpn_key_id(self, dynamic_key: str):
-    #     try:
-    #         result = await self.session.execute(
-    #             select(
-    #                 VPNKeys.server_id,
-    #                 VPNKeys.outline_key_id
-    #             ).select_from(
-    #                 Subscriptions
-    #             ).join(
-    #                 VPNKeys, VPNKeys.vpn_key_id == Subscriptions.vpn_key_id
-    #             ).filter(VPNKeys.vpn_key_id == dynamic_key)
-    #         )
-    #
-    #         result = result.fetchone()
-    #
-    #         if result is None:
-    #             return False
-    #
-    #         return result
-    #     except Exception as e:
-    #         logger.error('Ошибка при получении сервера по айди vpn key', e)
-    #         return False
