@@ -1,5 +1,8 @@
 import asyncio
+import base64
 import logging
+import re
+
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -7,6 +10,7 @@ from sqlalchemy.orm import Session
 from cfg.config import OUTLINE_SALT, CRYPTO_KEY
 from db import methods
 from db.database import get_db
+from outline.outline_manager import OutlineManager
 
 cipher = Fernet(CRYPTO_KEY)
 app = FastAPI()
@@ -14,10 +18,38 @@ app = FastAPI()
 # Словарь для хранения активных IP и времени их добавления
 active_ips = {}
 
+
+async def parse_static_access_key(static_key):
+    # Проверяем формат ключа
+    match = re.match(r'ss://(.*)@(.*):(\d+)/\?outline=\d+', static_key)
+    if not match:
+        raise ValueError("Invalid static access key format")
+
+    # Извлекаем части ключа
+    encoded_info = match.group(1)
+    server = match.group(2)
+    server_port = int(match.group(3))
+
+    # Декодируем информацию
+    decoded_info = base64.b64decode(encoded_info).decode('utf-8')
+    method, password = decoded_info.split(':')
+
+    # Формируем результат
+    access_info = {
+        "server": server,
+        "server_port": server_port,
+        "password": password,
+        "method": method
+    }
+
+    return access_info
+
+
 async def decrypt_part(encrypted_data: str) -> str:
     """Дешифровывает данные."""
     decrypted_data = cipher.decrypt(encrypted_data.encode())
     return decrypted_data.decode('utf-8')
+
 
 async def manage_active_ips():
     """Удаляет IP-адреса, которые были активны больше 5 секунд назад."""
@@ -30,17 +62,19 @@ async def manage_active_ips():
             del active_ips[ip]
             logging.info(f"Removed inactive IP: {ip}")
 
+
 @app.on_event("startup")
 async def startup_event():
     """Запускает корутину для управления активными IP-адресами при старте приложения."""
     asyncio.create_task(manage_active_ips())
 
+
 @app.get('/access-key/{encrypted_part}')
 async def get_key(encrypted_part: str, request: Request, db: Session = Depends(get_db)):
     user_ip = request.client.host
-    current_time = asyncio.get_event_loop().time()  # Используем время цикла событий
+    current_time = asyncio.get_event_loop().time()
+    print(f"Added IP: {user_ip} at {current_time}")
 
-    # Добавляем IP в активные с текущим временем
     active_ips[user_ip] = current_time
     logging.info(f"Added IP: {user_ip} at {current_time}")
 
@@ -61,7 +95,13 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="User not found")
 
     servers = await methods.get_servers(db)
-    return {"subscription": sub, "servers": servers}
+    for server in servers:
+        outline_manager = OutlineManager(api_url=server.api_url, cert_sha256=server.cert_sha256)
+        await outline_manager.delete_key(user_id)
+        if len(await outline_manager.get_keys()) <= 12:
+            key = await outline_manager.create_key(str(user_id))
+            return await parse_static_access_key(static_key=key.access_url)
+
 
 @app.get('/check-access')
 async def check_access(request: Request):
