@@ -1,4 +1,4 @@
-from telegram_bot.database.methods import services, users, subscriptions, server, transactions
+from database.methods import services, users, subscriptions, server, transactions
 
 
 class MethodsManager:

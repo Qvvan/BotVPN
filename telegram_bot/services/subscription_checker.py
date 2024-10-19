@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 from aiogram import Bot
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.models.models import Subscriptions, SubscriptionStatusEnum
+from database.context_manager import DatabaseContextManager
+from lexicon.lexicon_ru import LEXICON_RU
+from logger.logging_config import logger
+from models.models import Subscriptions, SubscriptionStatusEnum
 
 
 async def check_subscriptions(bot: Bot):

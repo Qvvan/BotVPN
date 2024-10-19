@@ -4,8 +4,8 @@ import re
 
 from outline_vpn.outline_vpn import OutlineVPN
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.logger.logging_config import logger
+from database.context_manager import DatabaseContextManager
+from logger.logging_config import logger
 
 
 class OutlineManager:

@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
-from telegram_bot.database.db_methods import MethodsManager
-from telegram_bot.database.init_db import DataBase
+from database.db_methods import MethodsManager
+from database.init_db import DataBase
 
 
 class DatabaseContextManager:

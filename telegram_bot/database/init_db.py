@@ -1,8 +1,8 @@
 from environs import Env
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from telegram_bot.config_data.config import DSN
-from telegram_bot.models.models import Base
+from config_data.config import DSN
+from models.models import Base
 
 env = Env()
 

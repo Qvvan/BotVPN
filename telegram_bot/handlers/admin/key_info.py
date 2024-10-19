@@ -2,11 +2,11 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from telegram_bot.config_data.config import ADMIN_IDS
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.filters.admin import IsAdmin
-from telegram_bot.keyboards.kb_inline import InlineKeyboards
-from telegram_bot.state.state import KeyInfo
+from config_data.config import ADMIN_IDS
+from database.context_manager import DatabaseContextManager
+from filters.admin import IsAdmin
+from keyboards.kb_inline import InlineKeyboards
+from state.state import KeyInfo
 
 router = Router()
 

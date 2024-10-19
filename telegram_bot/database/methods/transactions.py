@@ -5,9 +5,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from telegram_bot.config_data.config import CRYPTO_KEY
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.models.models import Transactions
+from config_data.config import CRYPTO_KEY
+from logger.logging_config import logger
+from models.models import Transactions
 
 
 class TransactionMethods:

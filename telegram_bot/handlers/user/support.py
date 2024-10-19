@@ -2,8 +2,8 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 
-from telegram_bot.keyboards.kb_inline import InlineKeyboards
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
+from keyboards.kb_inline import InlineKeyboards
+from lexicon.lexicon_ru import LEXICON_RU
 
 router = Router()
 

@@ -4,14 +4,14 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, PreCheckoutQuery, LabeledPrice
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.handlers.user.subs import extend_sub_successful_payment, new_order_successful_payment
-from telegram_bot.keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.services.send_sms_admins import notify_group
-from telegram_bot.services.services import process_successful_payment
-from telegram_bot.state.state import ChoiceServer
+from database.context_manager import DatabaseContextManager
+from handlers.user.subs import extend_sub_successful_payment, new_order_successful_payment
+from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory
+from lexicon.lexicon_ru import LEXICON_RU
+from logger.logging_config import logger
+from services.send_sms_admins import notify_group
+from services.services import process_successful_payment
+from state.state import ChoiceServer
 
 router = Router()
 

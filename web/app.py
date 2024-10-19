@@ -1,3 +1,5 @@
+import logging
+
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -27,7 +29,8 @@ async def get_key(encrypted_part: str, db: Session = Depends(get_db)):
 
         hex_id = decrypted_key[len(OUTLINE_SALT):]
         user_id = int(hex_id, 16)
-    except:
+    except Exception as e:
+        logging.error("User not found:", e)
         return HTTPException(status_code=404, detail="User not found")
 
     sub = await methods.get_subscription(db, user_id)

@@ -2,8 +2,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.models.models import Servers
+from logger.logging_config import logger
+from models.models import Servers
 
 
 class ServerMethods:

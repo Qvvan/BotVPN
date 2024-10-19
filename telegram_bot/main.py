@@ -5,16 +5,16 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from telegram_bot.config_data import config
-from telegram_bot.database.init_db import DataBase
-from telegram_bot.handlers.admin import add_key, add_server, key_info, unban_user, block_key, cancel, refund, del_key, \
+from config_data import config
+from database.init_db import DataBase
+from handlers.admin import add_server, key_info, unban_user, block_key, cancel, refund, del_key, \
     unblock_key, help_info, ban_user
-from telegram_bot.handlers.user import subs
-from telegram_bot.handlers.user import start, support, createorder
-from telegram_bot.keyboards import set_main_menu
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
-from telegram_bot.services import run_checker
+from handlers.user import subs
+from handlers.user import start, support, createorder
+from keyboards.set_menu import set_main_menu
+from logger.logging_config import logger
+from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
+from services.subscription_checker import run_checker
 
 
 async def on_startup(bot: Bot):
@@ -65,7 +65,6 @@ async def main():
     dp.include_router(support.router)
 
     # admin-handlers
-    dp.include_router(add_key.router)
     dp.include_router(add_server.router)
     dp.include_router(ban_user.router)
     dp.include_router(block_key.router)

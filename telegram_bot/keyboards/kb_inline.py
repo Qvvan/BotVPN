@@ -2,8 +2,8 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.logger.logging_config import logger
+from database.context_manager import DatabaseContextManager
+from logger.logging_config import logger
 
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):

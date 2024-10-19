@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
-from telegram_bot.config_data.config import OUTLINE_USERS_GATEWAY, OUTLINE_SALT
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
-from telegram_bot.main import logger
-from telegram_bot.models.models import Transactions, Subscriptions
-from telegram_bot.outline.outline_manager.outline_manager import OutlineManager
-from telegram_bot.services.crypto import encrypt_part
-from telegram_bot.services.send_sms_admins import notify_group
+from config_data.config import OUTLINE_USERS_GATEWAY, OUTLINE_SALT
+from database.context_manager import DatabaseContextManager
+from lexicon.lexicon_ru import LEXICON_RU
+from main import logger
+from models.models import Transactions, Subscriptions
+from outline.outline_manager.outline_manager import OutlineManager
+from services.crypto import encrypt_part
+from services.send_sms_admins import notify_group
 
 
 async def process_successful_payment(message):

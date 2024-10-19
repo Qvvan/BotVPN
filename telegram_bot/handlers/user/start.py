@@ -2,11 +2,11 @@ from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.models.models import Users
-from telegram_bot.services.send_sms_admins import notify_group
+from database.context_manager import DatabaseContextManager
+from lexicon.lexicon_ru import LEXICON_RU
+from logger.logging_config import logger
+from models.models import Users
+from services.send_sms_admins import notify_group
 
 router = Router()
 

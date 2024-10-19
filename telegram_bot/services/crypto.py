@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
 
-from telegram_bot.config_data.config import CRYPTO_KEY
+from config_data.config import CRYPTO_KEY
 
 cipher = Fernet(CRYPTO_KEY)
 

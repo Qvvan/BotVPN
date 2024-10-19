@@ -1,9 +1,9 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 
-from telegram_bot.config_data.config import ADMIN_IDS
-from telegram_bot.filters.admin import IsAdmin
-from telegram_bot.lexicon.lexicon_ru import LEXICON_COMMANDS_ADMIN
+from config_data.config import ADMIN_IDS
+from filters.admin import IsAdmin
+from lexicon.lexicon_ru import LEXICON_COMMANDS_ADMIN
 
 router = Router()
 

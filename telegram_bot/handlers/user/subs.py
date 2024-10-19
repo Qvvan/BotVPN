@@ -5,13 +5,13 @@ from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, LabeledPrice
 
-from telegram_bot.database.context_manager import DatabaseContextManager
-from telegram_bot.keyboards.kb_inline import InlineKeyboards, SubscriptionCallbackFactory
-from telegram_bot.lexicon.lexicon_ru import LEXICON_RU
-from telegram_bot.logger.logging_config import logger
-from telegram_bot.models.models import Subscriptions, SubscriptionStatusEnum
-from telegram_bot.outline.outline_manager.outline_manager import OutlineManager
-from telegram_bot.services.send_sms_admins import notify_group
+from database.context_manager import DatabaseContextManager
+from keyboards.kb_inline import InlineKeyboards, SubscriptionCallbackFactory
+from lexicon.lexicon_ru import LEXICON_RU
+from logger.logging_config import logger
+from models.models import Subscriptions, SubscriptionStatusEnum
+from outline.outline_manager.outline_manager import OutlineManager
+from services.send_sms_admins import notify_group
 
 router = Router()
 

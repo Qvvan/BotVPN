@@ -1,17 +1,29 @@
-version: '3.8'
-
 services:
   telegram-bot:
-    build: .
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
     container_name: telegram-bot
     restart: always
     env_file:
       - .env
     depends_on:
       - db
-    volumes:
-      - .:/app
     command: python main.py
+    networks:
+      - bot-network
+
+  fastapi:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "12345:12345"
+    command: [ "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "12345", "--reload" ]
     networks:
       - bot-network
 
@@ -40,8 +52,21 @@ services:
     networks:
       - bot-network
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./html:/usr/share/nginx/html:ro
+    networks:
+      - bot-network
+
+
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   bot-network:

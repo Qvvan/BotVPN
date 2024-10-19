@@ -2,8 +2,8 @@ from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from telegram_bot.config_data import config
-from telegram_bot.logger.logging_config import logger
+from config_data import config
+from logger.logging_config import logger
 
 
 async def notify_group(message: str, is_error: bool = False):
