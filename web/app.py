@@ -34,7 +34,6 @@ async def parse_static_access_key(static_key):
     decoded_info = base64.b64decode(encoded_info).decode('utf-8')
     method, password = decoded_info.split(':')
 
-    # Формируем результат
     access_info = {
         "server": server,
         "server_port": server_port,
@@ -100,7 +99,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
         await outline_manager.delete_key(user_id)
         if len(await outline_manager.get_keys()) <= 12:
             key = await outline_manager.create_key(str(user_id))
-            return await parse_static_access_key(static_key=key.access_url)
+            return type(await parse_static_access_key(static_key=key.access_url))
 
 
 @app.get('/check-access')
