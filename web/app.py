@@ -2,7 +2,6 @@ import asyncio
 import base64
 import logging
 import re
-import json
 
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -99,7 +98,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
         await outline_manager.delete_key(user_id)
         if len(await outline_manager.get_keys()) <= 12:
             key = await outline_manager.create_key(str(user_id))
-            return type(await parse_static_access_key(static_key=key.access_url))
+            return {'Ответ': type(await parse_static_access_key(static_key=key.access_url))}
 
 
 @app.get('/check-access')
