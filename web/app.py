@@ -2,6 +2,7 @@ import asyncio
 import base64
 import logging
 import re
+import json
 
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -41,7 +42,9 @@ async def parse_static_access_key(static_key):
         "method": method
     }
 
-    return access_info
+    access_info_json = json.dumps(access_info)
+
+    return access_info_json
 
 
 async def decrypt_part(encrypted_data: str) -> str:
