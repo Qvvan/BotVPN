@@ -42,9 +42,7 @@ async def parse_static_access_key(static_key):
         "method": method
     }
 
-    access_info_json = json.dumps(access_info)
-
-    return access_info_json
+    return access_info
 
 
 async def decrypt_part(encrypted_data: str) -> str:
