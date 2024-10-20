@@ -15,7 +15,6 @@ from outline.outline_manager import OutlineManager
 cipher = Fernet(CRYPTO_KEY)
 app = FastAPI()
 
-# Словарь для хранения активных IP и времени их добавления
 active_ips = {}
 
 
@@ -28,7 +27,7 @@ async def parse_static_access_key(static_key):
     # Извлекаем части ключа
     encoded_info = match.group(1)
     server = match.group(2)
-    server_port = int(match.group(3))
+    server_port = match.group(3)
 
     # Декодируем информацию
     decoded_info = base64.b64decode(encoded_info).decode('utf-8')
