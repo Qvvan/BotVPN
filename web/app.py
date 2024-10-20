@@ -64,7 +64,7 @@ async def manage_active_ips():
         await asyncio.sleep(1)
         current_time = asyncio.get_event_loop().time()
 
-        to_remove = [ip for ip, timestamp in active_ips.items() if current_time - timestamp > 5]
+        to_remove = [ip for ip, timestamp in active_ips.items() if current_time - timestamp > 10]
         for ip in to_remove:
             del active_ips[ip]
             logging.info(f"Removed inactive IP: {ip}")
