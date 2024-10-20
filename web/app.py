@@ -98,7 +98,8 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
         await outline_manager.delete_key(user_id)
         if len(await outline_manager.get_keys()) <= 12:
             key = await outline_manager.create_key(str(user_id))
-            return {'Ответ': type(await parse_static_access_key(static_key=key.access_url))}
+            access_info = await parse_static_access_key(static_key=key.access_url)
+            return {'Ответ': access_info}
 
 
 @app.get('/check-access')
