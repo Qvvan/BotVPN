@@ -5,6 +5,7 @@ import re
 
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from cfg.config import OUTLINE_SALT, CRYPTO_KEY
@@ -14,6 +15,14 @@ from outline.outline_manager import OutlineManager
 
 cipher = Fernet(CRYPTO_KEY)
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 active_ips = {}
 
@@ -99,9 +108,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
         if len(await outline_manager.get_keys()) <= 12:
             key = await outline_manager.create_key(str(user_id))
             access_info = await parse_static_access_key(static_key=key.access_url)
-            info_type = type(access_info)
-
-            return {'Ответ': str(info_type)}
+            return access_info
 
 
 @app.get('/check-access')
