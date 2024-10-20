@@ -118,4 +118,4 @@ async def check_access(request: Request):
     if user_ip not in active_ips:
         raise HTTPException(status_code=403, detail="Access denied. IP not found.")
 
-    return {"status": "Access granted"}
+    return HTTPException(status_code=200, detail="Access granted")
