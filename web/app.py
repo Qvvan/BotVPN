@@ -78,7 +78,7 @@ async def startup_event():
 
 @app.get('/access-key/{encrypted_part}')
 async def get_key(encrypted_part: str, request: Request, db: Session = Depends(get_db)):
-    user_ip = request.client.host
+    user_ip = request.headers.get('X-Forwarded-For', request.client.host)
     current_time = asyncio.get_event_loop().time()
     print(f"Added IP: {user_ip} at {current_time}")
 
