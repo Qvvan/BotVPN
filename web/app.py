@@ -113,6 +113,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
 
 @app.get('/check-access')
 async def check_access(ip: str):
+    print(ip)
     if ip not in active_ips:
         raise HTTPException(status_code=403, detail="Access denied. IP not found.")
 
