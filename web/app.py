@@ -7,6 +7,7 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
 
 from cfg.config import OUTLINE_SALT, CRYPTO_KEY
 from db import methods
@@ -113,9 +114,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
 
 @app.get('/check-access')
 async def check_access(ip: str):
-    print(ip)
-    print(active_ips)
     if ip not in active_ips:
         raise HTTPException(status_code=403, detail="Access denied. IP not found.")
 
-    return HTTPException(status_code=200, detail="Access granted")
+    return JSONResponse(status_code=200, content={"detail": "Access granted"})
