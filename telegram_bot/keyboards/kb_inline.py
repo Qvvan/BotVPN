@@ -48,6 +48,7 @@ class InlineKeyboards:
     async def create_pay(price) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
+        keyboard.button(text="⭐ Купить звезды ⭐", url='https://telegra.ph/Instrukciya-po-pokupke-zvezd-dlya-VPN-cherez-Telegram-bota-10-22')
         keyboard.button(text="🔙 Назад", callback_data="back_to_services")
 
         keyboard.adjust(1)
