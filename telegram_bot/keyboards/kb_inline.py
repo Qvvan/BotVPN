@@ -139,3 +139,18 @@ class InlineKeyboards:
         keyboard.add(back_button)
 
         return keyboard.as_markup()
+
+
+    @staticmethod
+    async def show_start_menu() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        know_more_button = InlineKeyboardButton(
+            text="Узнать больше",
+            callback_data="know_more",
+        )
+        keyboard.add(know_more_button)
+
+        return keyboard.as_markup()
+
+

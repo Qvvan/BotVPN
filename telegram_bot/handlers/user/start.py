@@ -3,17 +3,21 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from database.context_manager import DatabaseContextManager
+from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Users
-from services.send_sms_admins import notify_group
+from utils.send_sms_admins import notify_group
 
 router = Router()
 
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    await message.answer(text=LEXICON_RU['start'])
+    await message.answer(
+        text=LEXICON_RU['start'],
+        reply_markup=await InlineKeyboards.show_start_menu()
+    )
     user = Users(
         tg_id=message.from_user.id,
         username=message.from_user.username,

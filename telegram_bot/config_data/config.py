@@ -18,5 +18,5 @@ REDIS_HOST = env.str("REDIS_HOST", "localhost")
 REDIS_PORT = env.int("REDIS_PORT", 6379)
 REDIS_DB = env.int("REDIS_DB", 0)
 
-OUTLINE_USERS_GATEWAY = 'ssconf://masknetvpn.ru'
-OUTLINE_SALT = 'ZBKufSbyukFASny8oAFn078fN3'
+OUTLINE_USERS_GATEWAY = env.str('OUTLINE_USERS_GATEWAY')
+OUTLINE_SALT = env.str('OUTLINE_SALT')

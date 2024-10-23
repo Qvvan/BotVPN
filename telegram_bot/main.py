@@ -9,12 +9,13 @@ from config_data import config
 from database.init_db import DataBase
 from handlers.admin import add_server, key_info, unban_user, block_key, cancel, refund, del_key, \
     unblock_key, help_info, ban_user
+from handlers.services import payments_service
 from handlers.user import subs
 from handlers.user import start, support, createorder
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
 from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
-from services.subscription_checker import run_checker
+from utils.subscription_checker import run_checker
 
 
 async def on_startup(bot: Bot):
@@ -63,6 +64,7 @@ async def main():
     dp.include_router(subs.router)
     dp.include_router(start.router)
     dp.include_router(support.router)
+    dp.include_router(payments_service.router)
 
     # admin-handlers
     dp.include_router(add_server.router)
