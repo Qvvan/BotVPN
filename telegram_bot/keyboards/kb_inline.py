@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.context_manager import DatabaseContextManager
+from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 
 
@@ -48,10 +49,11 @@ class InlineKeyboards:
     async def create_pay(price) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
-        keyboard.button(text="⭐ Купить звезды ⭐", url='https://telegra.ph/Instrukciya-po-pokupke-zvezd-dlya-VPN-cherez-Telegram-bota-10-22')
+        keyboard.button(text="⭐ Купить звезды ⭐",
+                        url='https://telegra.ph/Instrukciya-po-pokupke-zvezd-dlya-VPN-cherez-Telegram-bota-10-22')
         keyboard.button(text="🔙 Назад", callback_data="back_to_services")
 
-        keyboard.adjust(1)
+        keyboard.adjust(1, 2)
 
         return keyboard.as_markup()
 
@@ -140,17 +142,62 @@ class InlineKeyboards:
 
         return keyboard.as_markup()
 
-
     @staticmethod
     async def show_start_menu() -> InlineKeyboardMarkup:
+        """Клавиатура для стартового меню."""
         keyboard = InlineKeyboardBuilder()
 
+        # Кнопка "Узнать больше"
         know_more_button = InlineKeyboardButton(
             text="Узнать больше",
             callback_data="know_more",
         )
-        keyboard.add(know_more_button)
+
+        # Кнопка "Оформить подписку"
+        subscribe_button = InlineKeyboardButton(
+            text="Оформить подписку",
+            callback_data="subscribe"
+        )
+
+        # Добавляем кнопки в клавиатуру
+        keyboard.add(know_more_button, subscribe_button)
+
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def support_and_subscribe_keyboard() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        # Кнопка для обращения в поддержку
+        support_button = InlineKeyboardButton(
+            text="Поддержка",
+            callback_data="support_callback"
+        )
+
+        # Кнопка для оформления подписки
+        subscribe_button = InlineKeyboardButton(
+            text="Оформить подписку",
+            callback_data="subscribe"
+        )
+
+        keyboard.add(support_button, subscribe_button)
+
+        # Располагаем кнопки в одну строку
+        keyboard.adjust(2)
 
         return keyboard.as_markup()
 
 
+    @staticmethod
+    async def get_guide() -> InlineKeyboardMarkup:
+        # Создаем клавиатуру с кнопкой "Инструкция"
+        keyboard = InlineKeyboardBuilder()
+
+        instruction_button = InlineKeyboardButton(
+            text="Инструкция 📖",
+            url=LEXICON_RU['outline_info']  # Ссылка на инструкцию
+        )
+
+        keyboard.add(instruction_button)
+
+        return keyboard.as_markup()

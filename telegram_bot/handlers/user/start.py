@@ -1,6 +1,6 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import InlineKeyboards
@@ -19,7 +19,7 @@ async def process_start_command(message: Message):
         reply_markup=await InlineKeyboards.show_start_menu()
     )
     user = Users(
-        tg_id=message.from_user.id,
+        user_id=message.from_user.id,
         username=message.from_user.username,
     )
     async with DatabaseContextManager() as session_methods:
@@ -33,4 +33,13 @@ async def process_start_command(message: Message):
             await session_methods.session.commit()
         except Exception as e:
             logger.error('При кнопке старт произошла ошибка', e)
+
+
+@router.callback_query(lambda c: c.data == 'know_more')
+async def handle_know_more(callback_query: CallbackQuery):
+    """Обработчик кнопки 'Узнать больше'."""
+    await callback_query.message.edit_text(
+        text=LEXICON_RU['know_more'],
+        reply_markup=await InlineKeyboards.support_and_subscribe_keyboard()
+    )
 

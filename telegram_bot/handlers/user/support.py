@@ -47,3 +47,12 @@ async def handle_back_to_support_menu(callback: CallbackQuery):
         text=LEXICON_RU['support'],
         reply_markup=await InlineKeyboards.get_support()
     )
+
+
+@router.callback_query(lambda c: c.data == 'support_callback')
+async def handle_subscribe(callback_query: CallbackQuery):
+    """Обработчик кнопки 'Оформить подписку' в главном меню."""
+    await callback_query.message.edit_text(
+        text=LEXICON_RU['support'],
+        reply_markup=await InlineKeyboards.get_support()
+    )

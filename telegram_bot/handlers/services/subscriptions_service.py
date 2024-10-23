@@ -7,6 +7,7 @@ from config_data.config import OUTLINE_USERS_GATEWAY
 from database.context_manager import DatabaseContextManager
 from handlers.services.create_subscription_service import SubscriptionService
 from handlers.services.create_transaction_service import TransactionService
+from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Subscriptions, SubscriptionStatusEnum
@@ -152,9 +153,12 @@ class SubscriptionsService:
             message (telegram.Message): Сообщение от Telegram, в которое будет отправлено уведомление.
             vpn_key (str): Ключ доступа VPN, который будет отправлен пользователю.
         """
-        await message.answer(text=LEXICON_RU['outline_info'])
         await message.answer(
-            text=f'Ваш ключ:\n<pre>{vpn_key}</pre>',
+            text='Ты успешно оформил подписку. ✅ Держи инструкцию по установке Outline и ключа ⬇️',
+            reply_markup=await InlineKeyboards.get_guide()
+        )
+        await message.answer(
+            text=f'<pre>{vpn_key}</pre>',
             parse_mode="HTML",
         )
 

@@ -54,3 +54,14 @@ async def back_to_services(callback_query: CallbackQuery):
         reply_markup=await InlineKeyboards.create_order_keyboards()
     )
     await callback_query.message.delete()
+
+
+@router.callback_query(lambda c: c.data == 'subscribe')
+async def handle_subscribe(callback_query: CallbackQuery, state: FSMContext):
+    """Обработчик кнопки 'Оформить подписку' в главном меню."""
+    await callback_query.message.edit_text(
+        text=LEXICON_RU['createorder'],
+        reply_markup=await InlineKeyboards.create_order_keyboards()
+    )
+
+    await state.set_state(ChoiceServer.waiting_for_services)

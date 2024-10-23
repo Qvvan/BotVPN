@@ -11,7 +11,7 @@ async def send_invoice(
         service_id: int,
         duration_days: int,
         action: str,
-        subscription_id: int,
+        subscription_id: int = None,
 ):
     try:
         prices = [LabeledPrice(label="XTR", amount=price)]
