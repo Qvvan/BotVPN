@@ -59,5 +59,5 @@ async def unban_user(user_id: int, session) -> dict:
         return {'success': True, 'message': 'Пользователь успешно разблокирован'}
 
     except Exception as e:
-        logger.log_error('Произошла ошибка при разблокировке пользователя', e)
+        await logger.log_error('Произошла ошибка при разблокировке пользователя', e)
         return {'success': False, 'message': f'Произошла ошибка при разблокировке пользователя: {str(e)}'}

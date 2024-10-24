@@ -20,7 +20,7 @@ class TransactionService:
             )
             return transaction
         except Exception as e:
-            logger.log_error(f"Пользователь: @{message.from_user.username}"
+            await logger.log_error(f"Пользователь: @{message.from_user.username}"
                              f"Ошибка при создании транзакции", e)
             return None
 

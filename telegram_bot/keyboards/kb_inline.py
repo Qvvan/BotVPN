@@ -43,7 +43,7 @@ class InlineKeyboards:
 
                 return keyboard.as_markup()
             except Exception as e:
-                logger.log_error(f'Произошла ошибка при формирование услуг', e)
+                await logger.log_error(f'Произошла ошибка при формирование услуг', e)
 
     @staticmethod
     async def create_pay(price) -> InlineKeyboardMarkup:

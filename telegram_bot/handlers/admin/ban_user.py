@@ -59,5 +59,5 @@ async def ban_user(user_id: int, session) -> dict:
         return {'success': True, 'message': 'Пользователь успешно заблокирован'}
 
     except Exception as e:
-        logger.log_error('Произошла ошибка при блокировке пользователя', e)
+        await logger.log_error('Произошла ошибка при блокировке пользователя', e)
         return {'success': False, 'message': f'Произошла ошибка при блокировке пользователя: {str(e)}'}

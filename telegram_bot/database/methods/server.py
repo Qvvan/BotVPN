@@ -19,7 +19,7 @@ class ServerMethods:
             server = result.scalars().first()
             return server is not None
         except SQLAlchemyError as e:
-            logger.log_error(f"Error checking if server exists", e)
+            await logger.log_error(f"Error checking if server exists", e)
             return False
 
     async def add_server(self, server_data: dict) -> bool:
@@ -48,11 +48,11 @@ class ServerMethods:
 
         except IntegrityError as e:
             await self.session.rollback()
-            logger.log_error(f"Integrity error when adding server", e)
+            await logger.log_error(f"Integrity error when adding server", e)
             return False
         except SQLAlchemyError as e:
             await self.session.rollback()
-            logger.log_error(f"SQLAlchemy error when adding server", e)
+            await logger.log_error(f"SQLAlchemy error when adding server", e)
             return False
 
     async def get_all_servers(self):
@@ -64,5 +64,5 @@ class ServerMethods:
             servers = result.scalars().all()
             return servers
         except SQLAlchemyError as e:
-            logger.log_error(f"Error fetching servers from the database", e)
+            await logger.log_error(f"Error fetching servers from the database", e)
             return []

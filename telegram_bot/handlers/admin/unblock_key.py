@@ -62,5 +62,5 @@ async def unblock_key(vpn_code: str, session) -> dict:
         return {'success': True, 'message': 'Ключ успешно разблокирован'}
 
     except Exception as e:
-        logger.log_error('Произошла ошибка при разблокировке ключа', e)
+        await logger.log_error('Произошла ошибка при разблокировке ключа', e)
         return {'success': False, 'message': f'Произошла ошибка при разблокировке ключа: {str(e)}'}

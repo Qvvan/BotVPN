@@ -37,7 +37,7 @@ class SubscriptionMethods:
 
             return subscription
         except SQLAlchemyError as e:
-            logger.log_error(f"Error retrieving subscription", e)
+            await logger.log_error(f"Error retrieving subscription", e)
             return None
 
     async def update_sub(self, sub: Subscriptions):
@@ -63,7 +63,7 @@ class SubscriptionMethods:
 
             return True
         except SQLAlchemyError as e:
-            logger.log_error(f"Error updating subscription", e)
+            await logger.log_error(f"Error updating subscription", e)
             raise
 
     async def create_sub(self, sub: Subscriptions):
@@ -71,7 +71,7 @@ class SubscriptionMethods:
             self.session.add(sub)
             return True
         except SQLAlchemyError as e:
-            logger.log_error(f"Error creating subscription", e)
+            await logger.log_error(f"Error creating subscription", e)
             return False
 
     async def get_subs(self):
@@ -81,12 +81,12 @@ class SubscriptionMethods:
             )
             subs = result.scalars().all()
             if len(subs) == 0:
-                logger.log_info('Нет ни одной подписки')
+                await logger.log_info('Нет ни одной подписки')
                 return False
 
             return subs
         except SQLAlchemyError as e:
-            logger.log_error('Не удалось получить подписки', e)
+            await logger.log_error('Не удалось получить подписки', e)
             raise
 
     async def delete_sub(self, subscription_id: int):
@@ -99,5 +99,5 @@ class SubscriptionMethods:
             return False
 
         except SQLAlchemyError as e:
-            logger.log_error(f"Ошибка при удалении подписки с ID {subscription_id}", e)
+            await logger.log_error(f"Ошибка при удалении подписки с ID {subscription_id}", e)
             raise

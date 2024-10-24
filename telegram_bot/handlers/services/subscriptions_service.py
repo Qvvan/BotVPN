@@ -63,11 +63,11 @@ class SubscriptionsService:
 
                 await session_methods.session.commit()
                 await SubscriptionsService.send_success_response(message, dynamic_key)
-                logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
                                 f"Оформил подписку на {duration_date} дней")
 
             except Exception as e:
-                logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
                                  f"Error during transaction processing", e)
                 await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
                 await SubscriptionsService.refund_payment(message)
@@ -118,13 +118,13 @@ class SubscriptionsService:
                             ))
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             await session_methods.session.commit()
-                            logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                            await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
                                             f"Продлил подписку на {durations_days} дней")
                 else:
                     await message.answer(text="Подписка не найдена. Проверьте данные.")
 
             except Exception as e:
-                logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
                                  f"Error during transaction processing", e)
                 await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
 
