@@ -11,9 +11,9 @@ class UserMethods:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_user(self, tg_id: int):
+    async def get_user(self, user_id: int):
         try:
-            result = await self.session.execute(select(Users).filter_by(tg_id=tg_id))
+            result = await self.session.execute(select(Users).filter_by(user_id=user_id))
             user = result.scalars().first()
             if user is not None:
                 return user
@@ -24,7 +24,7 @@ class UserMethods:
 
     async def add_user(self, user: Users):
         try:
-            if not await self.get_user(user.tg_id):
+            if not await self.get_user(user.user_id):
                 self.session.add(user)
                 return True
             return False
@@ -36,7 +36,7 @@ class UserMethods:
     async def ban_user(self, user_id: int):
         try:
             if await self.get_user(user_id):
-                stmt = update(Users).where(Users.tg_id == user_id).values(ban=1)
+                stmt = update(Users).where(Users.user_id == user_id).values(ban=1)
                 await self.session.execute(stmt)
                 return True
 
@@ -47,7 +47,7 @@ class UserMethods:
     async def unban_user(self, user_id: int):
         try:
             if await self.get_user(user_id):
-                stmt = update(Users).where(Users.tg_id == user_id).values(ban=0)
+                stmt = update(Users).where(Users.user_id == user_id).values(ban=0)
                 await self.session.execute(stmt)
                 return True
 
