@@ -36,9 +36,10 @@ async def process_start_command(message: Message):
 
 
 @router.callback_query(lambda c: c.data == 'know_more')
-async def handle_know_more(callback_query: CallbackQuery):
+async def handle_know_more(callback: CallbackQuery):
     """Обработчик кнопки 'Узнать больше'."""
-    await callback_query.message.edit_text(
+    await callback.answer()
+    await callback.message.edit_text(
         text=LEXICON_RU['know_more'],
         reply_markup=await InlineKeyboards.support_and_subscribe_keyboard()
     )
