@@ -16,8 +16,8 @@ class ChoiceServer(StatesGroup):
 
 
 class AddAdmin(StatesGroup):
-    waiting_apiUrl = State()
-    waiting_certSha256 = State()
+    waiting_json = State()
+    waiting_limit = State()
 
 
 class DeleteKey(StatesGroup):

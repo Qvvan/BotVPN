@@ -1,14 +1,15 @@
+import os
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 from dotenv import load_dotenv
-import os
+from sqlalchemy import engine_from_config, pool
 
 # Загрузите переменные окружения из файла .env
 load_dotenv()
 
 # Импортируйте ваши модели
-from telegram_bot.models.models import Base  # Замените на путь к вашему файлу с моделями
+from models.models import Base  # Замените на путь к вашему файлу с моделями
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,6 +23,7 @@ if config.config_file_name is not None:
 # Установите метаданные вашей модели
 target_metadata = Base.metadata
 
+
 def get_database_url() -> str:
     """Constructs the SQLAlchemy database URL from environment variables."""
     user = os.getenv("DB_USER")
@@ -31,6 +33,7 @@ def get_database_url() -> str:
     dbname = os.getenv("DB_NAME")
 
     return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -44,6 +47,7 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
@@ -62,6 +66,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

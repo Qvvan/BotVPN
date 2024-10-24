@@ -65,4 +65,5 @@ class Servers(Base):
     name = Column(String, nullable=False)
     api_url = Column(String, unique=True, nullable=False)
     cert_sha256 = Column(String, nullable=False)
+    limit = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
