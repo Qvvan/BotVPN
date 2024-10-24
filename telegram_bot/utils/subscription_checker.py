@@ -16,7 +16,7 @@ async def check_subscriptions(bot: Bot):
             if not subs:
                 return
         except Exception as e:
-            logger.log_error(f'Ошибка при получении подписок', e)
+            await logger.log_error(f'Ошибка при получении подписок', e)
             return
 
     current_date = datetime.utcnow() + timedelta(hours=3)
@@ -26,7 +26,7 @@ async def check_subscriptions(bot: Bot):
                 await process_subscription(bot, sub, current_date, session_methods)
             except Exception as e:
                 await session_methods.session.rollback()
-                logger.log_error('При проверке подписки произошла ошибка', e)
+                await logger.log_error('При проверке подписки произошла ошибка', e)
 
 
 async def process_subscription(bot: Bot, sub, current_date, session_methods):
@@ -88,7 +88,7 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
 async def handle_subscription_deletion(sub, session_methods):
     result = await session_methods.subscription.delete_sub(subscription_id=sub.subscription_id)
     if not result:
-        logger.error('Не удалось удалить подписку при ее истечении')
+        await logger.log_error('Не удалось удалить подписку при ее истечении', Exception)
         return
 
     await session_methods.session.commit()
@@ -99,6 +99,5 @@ async def handle_subscription_deletion(sub, session_methods):
 
 async def run_checker(bot: Bot):
     while True:
-        logger.info("Running subscription checker...")
         await check_subscriptions(bot)
-        await asyncio.sleep(5)
+        await asyncio.sleep(3600)

@@ -37,6 +37,13 @@ class CustomLogger:
         self.logger.error(full_message)
         await self.notify_group(message, error)
 
+    async def info(self, message):
+        self.logger.error(message)
+
+    async def error(self, message: str, error):
+        full_message = f"{message}. Error: {str(error)}"
+        self.logger.error(full_message)
+
 
 # Экземпляр логгера для использования в других модулях
 logger = CustomLogger(__name__)

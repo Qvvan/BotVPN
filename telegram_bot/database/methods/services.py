@@ -16,7 +16,7 @@ class ServiceMethods:
             services = result.scalars().all()
             return services
         except SQLAlchemyError as e:
-            logger.error(f"Ошибка получение услуги: {e}")
+            await logger.log_error(f"Ошибка получение услуги", e)
             return []
 
     async def get_service_by_id(self, service_id: int):
@@ -31,7 +31,7 @@ class ServiceMethods:
 
             return service
         except Exception as e:
-            logger.error('Не удалось взять данную услугу', e)
+            await logger.log_error('Не удалось взять данную услугу', e)
             raise
 
     async def add_service(self, name: str, duration_days: int, price: int):
@@ -44,5 +44,5 @@ class ServiceMethods:
             self.session.add(service)
             return service
         except SQLAlchemyError as e:
-            logger.error(f"Error adding service: {e}")
+            await logger.log_error("Error adding service", e)
             return None

@@ -17,7 +17,7 @@ class MessageLoggingMiddleware(BaseMiddleware):
         user_id = event.chat.id
         username = event.chat.username
         text = event.text
-        logger.info(f"Пользователь {username} (ID: {user_id}) отправил сообщение: {text}")
+        await logger.info(f"Пользователь {username} (ID: {user_id}) отправил сообщение: {text}")
 
         return await handler(event, data)
 
@@ -33,6 +33,6 @@ class CallbackLoggingMiddleware(BaseMiddleware):
         user_id = event.from_user.id
         username = event.from_user.username
         button_text = event.data
-        logger.info(f"Пользователь {username} (ID: {user_id}) нажал кнопку: {button_text}")
+        await logger.info(f"Пользователь {username} (ID: {user_id}) нажал кнопку: {button_text}")
 
         return await handler(event, data)

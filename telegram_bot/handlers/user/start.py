@@ -25,13 +25,13 @@ async def process_start_command(message: Message):
         try:
             status_user = await session_methods.users.add_user(user)
             if status_user:
-                logger.log_info(
+                await logger.log_info(
                     f"К нам присоединился:\n"
                     f"Имя: @{message.from_user.username}\n"
                     f"id: {message.from_user.id}")
             await session_methods.session.commit()
         except Exception as e:
-            logger.log_error(f'Пользователь: @{message.from_user.username}\n'
+            await logger.log_error(f'Пользователь: @{message.from_user.username}\n'
                              f'При команде /start произошла ошибка:', e)
 
 

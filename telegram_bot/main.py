@@ -24,7 +24,7 @@ async def on_startup(bot: Bot):
         try:
             await bot.send_message(admin_id, "Бот запущен.")
         except Exception as e:
-            logger.log_error(f"Ошибка отправки сообщения администратору {admin_id}", e)
+            await logger.log_error(f"Ошибка отправки сообщения администратору {admin_id}", e)
 
 
 async def on_shutdown(bot: Bot):
@@ -33,11 +33,11 @@ async def on_shutdown(bot: Bot):
         try:
             await bot.send_message(admin_id, "Бот завершает работу.")
         except Exception as e:
-            logger.log_error(f"Ошибка отправки сообщения администратору {admin_id}", e)
+            await logger.log_error(f"Ошибка отправки сообщения администратору {admin_id}", e)
 
 
 async def main():
-    logger.info('Starting bot')
+    await logger.info('Starting bot')
 
     db = DataBase()
     await db.create_db()
@@ -93,8 +93,8 @@ async def run_bot():
         try:
             await main()
         except Exception as e:
-            logger.log_error(f"Бот завершил работу с ошибкой", e)
-            logger.info("Перезапуск бота через 5 секунд...")
+            await logger.log_error(f"Бот завершил работу с ошибкой", e)
+            await logger.info("Перезапуск бота через 5 секунд...")
             await asyncio.sleep(5)
 
 if __name__ == "__main__":

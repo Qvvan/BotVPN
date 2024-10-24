@@ -24,15 +24,10 @@ class OutlineManager:
                         cert_sha256=server.cert_sha256
                     )
 
-                if self.clients:
-                    logger.info(f"Initialized {len(self.clients)} servers.")
-                else:
-                    logger.warning("No servers found in the database.")
-
                 self.initialization_done.set()
 
             except Exception as e:
-                logger.error(f"Error initializing clients: {e}")
+                await logger.log_error(f"Error initializing clients", e)
 
     async def wait_for_initialization(self):
         await self.initialization_done.wait()
@@ -44,7 +39,7 @@ class OutlineManager:
                 info = client.get_server_information()
                 server_info[server_id] = info['name']
             except Exception as e:
-                logger.error(f"Error fetching information for web {server_id}: {e}")
+                await logger.log_error(f"Error fetching information for web {server_id}", e)
                 server_info[server_id] = f"Ошибка: {str(e)}"
         return server_info
 
