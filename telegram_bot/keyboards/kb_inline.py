@@ -188,7 +188,7 @@ class InlineKeyboards:
         return keyboard.as_markup()
 
     @staticmethod
-    async def get_guide() -> InlineKeyboardMarkup:
+    async def get_guide(turn_on: str = None) -> InlineKeyboardMarkup:
         # Создаем клавиатуру с кнопкой "Инструкция"
         keyboard = InlineKeyboardBuilder()
 
@@ -196,7 +196,15 @@ class InlineKeyboards:
             text="Инструкция 📖",
             url=LEXICON_RU['outline_info']  # Ссылка на инструкцию
         )
-
         keyboard.add(instruction_button)
+
+        if turn_on:
+            back_button = InlineKeyboardButton(
+                text="🔙 Назад",
+                callback_data="back_to_support_menu"
+            )
+            keyboard.add(back_button)
+
+        keyboard.adjust(1)
 
         return keyboard.as_markup()

@@ -39,7 +39,7 @@ async def handle_install_guide(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
         text="Инструкция ⬇️",
-        reply_markup=await InlineKeyboards.get_guide()
+        reply_markup=await InlineKeyboards.get_guide('back_to_support_menu')
     )
 
 
