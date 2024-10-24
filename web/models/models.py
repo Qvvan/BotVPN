@@ -19,3 +19,4 @@ class Server(Base):
     name = Column(String)
     api_url = Column(String)
     cert_sha256 = Column(String)
+    limit = Column(Integer)
