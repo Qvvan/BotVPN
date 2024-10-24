@@ -38,8 +38,8 @@ async def handle_low_speed(callback: CallbackQuery):
 async def handle_install_guide(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
-        text=LEXICON_RU['outline_info'],
-        reply_markup=await InlineKeyboards.get_back_button_keyboard()
+        text="Инструкция ⬇️",
+        reply_markup=await InlineKeyboards.get_guide()
     )
 
 
