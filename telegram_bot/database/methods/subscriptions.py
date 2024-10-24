@@ -81,7 +81,7 @@ class SubscriptionMethods:
             )
             subs = result.scalars().all()
             if len(subs) == 0:
-                await logger.log_info('Нет ни одной подписки')
+                await logger.info('Нет ни одной подписки')
                 return False
 
             return subs
