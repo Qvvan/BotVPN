@@ -38,6 +38,7 @@ class SubscriptionsService:
             try:
                 # Извлечение информации о платеже из сообщения
                 in_payload = message.successful_payment.invoice_payload.split(':')
+                duration_date = in_payload[1]
                 user_id = message.from_user.id
 
                 # Создание транзакции
@@ -61,9 +62,12 @@ class SubscriptionsService:
 
                 await session_methods.session.commit()
                 await SubscriptionsService.send_success_response(message, dynamic_key)
+                logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                                f"Оформил подписку на {duration_date} дней")
 
             except Exception as e:
-                logger.error(f"Error during transaction processing: {e}")
+                logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                                 f"Error during transaction processing", e)
                 await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
                 await SubscriptionsService.refund_payment(message)
 
@@ -113,11 +117,14 @@ class SubscriptionsService:
                             ))
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             await session_methods.session.commit()
+                            logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                                            f"Продлил подписку на {durations_days} дней")
                 else:
                     await message.answer(text="Подписка не найдена. Проверьте данные.")
 
             except Exception as e:
-                logger.error(f"Error during transaction processing: {e}")
+                logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                                 f"Error during transaction processing", e)
                 await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
 
                 await SubscriptionsService.refund_payment(message)

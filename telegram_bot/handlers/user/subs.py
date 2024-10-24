@@ -47,7 +47,8 @@ async def get_user_subs(message: Message):
                     await message.answer(text=parseSubs, parse_mode="HTML")
 
         except Exception as e:
-            logger.error('Ошибка при получении подписок', e)
+            logger.log_error(f'Пользователь: @{message.from_user.username}\n'
+                             f'Ошибка при получении подписок', e)
 
 
 @router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'extend_subscription'))
@@ -88,5 +89,6 @@ async def extend_with_key(callback: CallbackQuery, callback_data: SubscriptionCa
                 raise
 
         except Exception as e:
-            logger.error('Ошибка при продлении подписки', e)
+            logger.log_error(f'Пользователь: @{callback.from_user.username}\n'
+                             f'Ошибка при продлении подписки', e)
             await callback.message.answer(text="Что-то пошло не так, обратитесь в техподдержку")

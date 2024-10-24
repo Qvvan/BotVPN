@@ -20,7 +20,8 @@ class TransactionService:
             )
             return transaction
         except Exception as e:
-            logger.error(f"Ошибка при создании транзакции: {e}")
+            logger.log_error(f"Пользователь: @{message.from_user.username}"
+                             f"Ошибка при создании транзакции", e)
             return None
 
     @staticmethod

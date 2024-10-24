@@ -19,7 +19,7 @@ class UserMethods:
                 return user
             return False
         except SQLAlchemyError as e:
-            logger.error(f"Error checking if user exists", e)
+            logger.log_error(f"Error checking if user exists", e)
             return False
 
     async def add_user(self, user: Users):
@@ -29,9 +29,9 @@ class UserMethods:
                 return True
             return False
         except IntegrityError as e:
-            logger.error(f"Error adding user", e)
+            logger.log_error(f"Error adding user", e)
         except SQLAlchemyError as e:
-            logger.error(f"Error adding user", e)
+            logger.log_error(f"Error adding user", e)
 
     async def ban_user(self, user_id: int):
         try:
@@ -42,7 +42,7 @@ class UserMethods:
 
             return False
         except Exception as e:
-            logger.error(f"Error banning user", e)
+            logger.log_error(f"Error banning user", e)
 
     async def unban_user(self, user_id: int):
         try:
@@ -53,4 +53,4 @@ class UserMethods:
 
             return False
         except Exception as e:
-            logger.error(f"Error unbanning user", e)
+            logger.log_error(f"Error unbanning user", e)

@@ -42,13 +42,14 @@ class InlineKeyboards:
 
                 return keyboard.as_markup()
             except Exception as e:
-                logger.error('Произошла ошибка при формирование услуг', e)
+                logger.log_error(f'Произошла ошибка при формирование услуг', e)
 
     @staticmethod
     async def create_pay(price) -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
         keyboard.button(text=f"Оплатить {price} ⭐️", pay=True)
-        keyboard.button(text="⭐ Купить звезды ⭐", url='https://telegra.ph/Instrukciya-po-pokupke-zvezd-dlya-VPN-cherez-Telegram-bota-10-22')
+        keyboard.button(text="⭐ Купить звезды ⭐",
+                        url='https://telegra.ph/Instrukciya-po-pokupke-zvezd-dlya-VPN-cherez-Telegram-bota-10-22')
         keyboard.button(text="🔙 Назад", callback_data="back_to_services")
 
         keyboard.adjust(1)
@@ -140,7 +141,6 @@ class InlineKeyboards:
 
         return keyboard.as_markup()
 
-
     @staticmethod
     async def show_start_menu() -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
@@ -152,5 +152,3 @@ class InlineKeyboards:
         keyboard.add(know_more_button)
 
         return keyboard.as_markup()
-
-

@@ -25,5 +25,5 @@ async def send_invoice(
             reply_markup=await InlineKeyboards.create_pay(price),
         )
     except Exception as e:
-        logger.error(f"Ошибка при создании инвойса: {e}")
+        logger.log_error(f"Ошибка при создании инвойса", e)
         await message.answer("Что-то пошло не так, обратитесь в техподдержку")

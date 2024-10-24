@@ -16,7 +16,7 @@ async def check_subscriptions(bot: Bot):
             if not subs:
                 return
         except Exception as e:
-            logger.error(f'Ошибка при получении подписок', e)
+            logger.log_error(f'Ошибка при получении подписок', e)
             return
 
     current_date = datetime.utcnow() + timedelta(hours=3)
@@ -26,7 +26,7 @@ async def check_subscriptions(bot: Bot):
                 await process_subscription(bot, sub, current_date, session_methods)
             except Exception as e:
                 await session_methods.session.rollback()
-                logger.error('При проверке подписки произошла ошибка', e)
+                logger.log_error('При проверке подписки произошла ошибка', e)
 
 
 async def process_subscription(bot: Bot, sub, current_date, session_methods):
@@ -60,7 +60,7 @@ async def send_reminder(bot: Bot, sub, session_methods):
         reminder_sent=1
     ))
     await session_methods.session.commit()
-    logger.info(
+    logger.log_info(
         f"Подписка {sub.subscription_id} истечет через 3 дня. Ключ {sub.dynamic_key} будет заблокирован."
     )
 
@@ -80,7 +80,7 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
         chat_id=sub.user_id,
         text=LEXICON_RU['expired'],
     )
-    logger.info(
+    logger.log_info(
         f"Подписка {sub.subscription_id} истекла. Ключ {sub.dynamic_key} заблокирован."
     )
 
@@ -92,7 +92,7 @@ async def handle_subscription_deletion(sub, session_methods):
         return
 
     await session_methods.session.commit()
-    logger.info(
+    logger.log_info(
         f"Подписка {sub.subscription_id} полностью удалена. Ключ {sub.dynamic_key} удалён."
     )
 

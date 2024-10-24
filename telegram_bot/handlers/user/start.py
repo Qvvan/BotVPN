@@ -7,7 +7,6 @@ from keyboards.kb_inline import InlineKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Users
-from utils.send_sms_admins import notify_group
 
 router = Router()
 
@@ -26,11 +25,12 @@ async def process_start_command(message: Message):
         try:
             status_user = await session_methods.users.add_user(user)
             if status_user:
-                await notify_group(
-                    message=f'Пользователь: @{message.from_user.username}\n'
-                            f'ID: {message.from_user.id}\n'
-                            f'Присоединился к нам в команду\n#start')
+                logger.log_info(
+                    f"К нам присоединился:\n"
+                    f"Имя: @{message.from_user.username}\n"
+                    f"id: {message.from_user.id}")
             await session_methods.session.commit()
         except Exception as e:
-            logger.error('При кнопке старт произошла ошибка', e)
+            logger.log_error(f'Пользователь: @{message.from_user.username}\n'
+                             f'При команде /start произошла ошибка:', e)
 
