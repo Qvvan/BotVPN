@@ -63,7 +63,7 @@ async def handle_save_button(callback_query: types.CallbackQuery, state: FSMCont
         await callback_query.answer("Не выбрано ни одного пользователя", show_alert=True)
         return
     await state.update_data(selected_users=selected_users)
-    await callback_query.message.edit_text("Напишите текст для уведомления:")
+    await callback_query.message.edit_text("Напишите текст для уведомления")
     await state.set_state("waiting_for_message_text")
 
 @router.message(StateFilter("waiting_for_message_text"))
@@ -78,10 +78,7 @@ async def handle_message_text(message: types.Message, state: FSMContext):
 
     await message.answer(
         f"Текст уведомления сохранен\n\n{message.text}\n\nКоличество получателей: {len(selected_users)}.",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✏️ Изменить текст", callback_data="edit_message"),
-             InlineKeyboardButton(text="📤 Отправить уведомление", callback_data="send_notification")]
-        ])
+        reply_markup=await InlineKeyboards.show_notify_change_cancel()
     )
     await state.set_state(None)
 

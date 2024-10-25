@@ -245,5 +245,26 @@ class InlineKeyboards:
 
         buttons.append([InlineKeyboardButton(text="Отменить всех ❌", callback_data="cancel_all")])
         buttons.append([InlineKeyboardButton(text="Сохранить", callback_data="save")])
+        buttons.append([InlineKeyboardButton(text='Отменить', callback_data='cancel')])
 
         return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    @staticmethod
+    async def show_notify_change_cancel() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        edit_message = InlineKeyboardButton(text="✏️ Изменить текст", callback_data="edit_message")
+        send_notification = InlineKeyboardButton(text="📤 Отправить уведомление", callback_data="send_notification")
+        cancel_button = InlineKeyboardButton(text='Отменить', callback_data='cancel')
+
+        # Добавляем кнопки "Изменить текст" и "Отправить уведомление" в одну строку
+        keyboard.add(edit_message, send_notification)
+        # Вставляем кнопку "Отменить" в новую строку
+        keyboard.add(cancel_button)
+
+        # Настройка: максимум по две кнопки в строке
+        keyboard.adjust(2)
+
+        return keyboard.as_markup()
+
+
