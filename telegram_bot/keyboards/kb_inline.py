@@ -222,8 +222,8 @@ class InlineKeyboards:
     @staticmethod
     async def create_user_pagination_with_users_keyboard(users, page: int, has_next: bool) -> InlineKeyboardMarkup:
         buttons = [[
-            InlineKeyboardButton(text="Добавить всех пользователей ✅", callback_data="add_all_users"),
-            InlineKeyboardButton(text="Добавить с подпиской ✅", callback_data="add_active_users")
+            InlineKeyboardButton(text="Add all ✅", callback_data="add_all_users"),
+            InlineKeyboardButton(text="Add subs ✅", callback_data="add_active_users")
         ]]
 
         # Кнопки для пользователей

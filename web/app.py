@@ -106,10 +106,10 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
     eligible_servers = []
     server_keys_info = []
 
-    # Собираем информацию о серверах и текущем количестве ключей
     for server in servers:
         outline_manager = OutlineManager(api_url=server.api_url, cert_sha256=server.cert_sha256)
         current_keys = await outline_manager.get_keys()
+        await outline_manager.delete_key(user_id)
         server_keys_info.append((server, len(current_keys), server.limit))
 
         # Проверяем, превышен ли лимит
@@ -117,18 +117,13 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
             eligible_servers.append((server, current_keys))
 
     if eligible_servers:
-        # Если есть подходящие серверы, выбираем с наименьшим количеством ключей
         eligible_servers.sort(key=lambda x: len(x[1]))
         selected_server = eligible_servers[0][0]
     else:
-        # Если все серверы достигли лимита, выбираем сервер с наименьшим количеством ключей
-        server_keys_info.sort(key=lambda x: x[1])  # Сортируем по количеству ключей
-        selected_server = server_keys_info[0][0]  # Сервер с наименьшим количеством ключей
+        server_keys_info.sort(key=lambda x: x[1])
+        selected_server = server_keys_info[0][0]
 
     outline_manager = OutlineManager(api_url=selected_server.api_url, cert_sha256=selected_server.cert_sha256)
-
-    # Удаляем ключ пользователя (если необходимо)
-    await outline_manager.delete_key(user_id)
 
     # Создаем новый ключ для пользователя
     new_key = await outline_manager.create_key(str(user_id))
