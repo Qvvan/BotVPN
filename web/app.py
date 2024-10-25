@@ -109,7 +109,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
     for server in servers:
         outline_manager = OutlineManager(api_url=server.api_url, cert_sha256=server.cert_sha256)
         current_keys = await outline_manager.get_keys()
-        await outline_manager.delete_key(encrypted_part)
+        await outline_manager.delete_key(user_id)
         server_keys_info.append((server, len(current_keys), server.limit))
 
         # Проверяем, превышен ли лимит
@@ -126,7 +126,7 @@ async def get_key(encrypted_part: str, request: Request, db: Session = Depends(g
     outline_manager = OutlineManager(api_url=selected_server.api_url, cert_sha256=selected_server.cert_sha256)
 
     # Создаем новый ключ для пользователя
-    new_key = await outline_manager.create_key(str(user_id), encrypted_part)
+    new_key = await outline_manager.create_key(str(user_id))
     access_info = await parse_static_access_key(static_key=new_key.access_url)
     return access_info
 
