@@ -244,6 +244,6 @@ class InlineKeyboards:
         buttons.append(pagination_buttons)
 
         buttons.append([InlineKeyboardButton(text="Отменить всех ❌", callback_data="cancel_all")])
-        buttons.append([InlineKeyboardButton(text="Сохранить", callback_data="continue")])
+        buttons.append([InlineKeyboardButton(text="Сохранить", callback_data="save")])
 
         return InlineKeyboardMarkup(inline_keyboard=buttons)

@@ -1,6 +1,7 @@
-from aiogram import Router, types
-from aiogram.filters import Command
+from aiogram import Router, types, F
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import UserPaginationCallback, InlineKeyboards, UserSelectCallback
@@ -52,6 +53,63 @@ async def handle_special_buttons(callback_query: types.CallbackQuery, state: FSM
     await show_users(callback_query.message, page, users_dict)
     await callback_query.answer()
 
+
+@router.callback_query(lambda call: call.data == 'save')
+async def handle_save_button(callback_query: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    users_dict = data.get('users', {})
+    selected_users = [user for user in users_dict.values() if user['selected']]
+    if not selected_users:
+        await callback_query.answer("Не выбрано ни одного пользователя", show_alert=True)
+        return
+    await state.update_data(selected_users=selected_users)
+    await callback_query.message.edit_text("Напишите текст для уведомления:")
+    await state.set_state("waiting_for_message_text")
+
+@router.message(StateFilter("waiting_for_message_text"))
+async def handle_message_text(message: types.Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, введите текст для уведомления.")
+        return
+
+    await state.update_data(message_text=message.text)
+    data = await state.get_data()
+    selected_users = data.get('selected_users', [])
+
+    await message.answer(
+        f"Текст уведомления сохранен\n\n{message.text}\n\nКоличество получателей: {len(selected_users)}.",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✏️ Изменить текст", callback_data="edit_message"),
+             InlineKeyboardButton(text="📤 Отправить уведомление", callback_data="send_notification")]
+        ])
+    )
+    await state.set_state(None)
+
+@router.callback_query(lambda call: call.data == 'edit_message')
+async def edit_message(callback_query: types.CallbackQuery, state: FSMContext):
+    await callback_query.message.answer("Напишите новый текст для уведомления")
+    await state.set_state("waiting_for_message_text")
+
+
+@router.callback_query(lambda call: call.data == 'send_notification')
+async def send_notification(callback_query: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    message_text = data.get('message_text')
+    selected_users = data.get('selected_users', [])
+
+    if not message_text:
+        await callback_query.answer("Текст уведомления отсутствует. Пожалуйста, задайте текст перед отправкой.", show_alert=True)
+        return
+
+    count = 0
+    for user in selected_users:
+        try:
+            await callback_query.bot.send_message(chat_id=user['user_id'], text=message_text)
+            count += 1
+        except Exception as e:
+            await callback_query.message.answer(f"Ошибка при отправке пользователю {user['user_id']}: {e}")
+
+    await callback_query.answer(f"Уведомление отправлено {count} пользователям.", show_alert=True, cache_time=2)
 
 @router.callback_query(UserPaginationCallback.filter())
 async def paginate_users(callback_query: types.CallbackQuery, callback_data: UserPaginationCallback, state: FSMContext):
