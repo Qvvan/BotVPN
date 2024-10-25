@@ -7,6 +7,15 @@ from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 
 
+class UserPaginationCallback(CallbackData, prefix="user"):
+    page: int
+    action: str
+
+
+class UserSelectCallback(CallbackData, prefix="user_select"):
+    user_id: int
+
+
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
 
@@ -14,6 +23,7 @@ class ServiceCallbackFactory(CallbackData, prefix='service'):
 class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
     action: str
     subscription_id: int
+
 
 
 class InlineKeyboards:
@@ -208,3 +218,53 @@ class InlineKeyboards:
         keyboard.adjust(1)
 
         return keyboard.as_markup()
+
+    @staticmethod
+    async def create_user_pagination_with_users_keyboard(users, page: int, has_next: bool) -> InlineKeyboardMarkup:
+        buttons = [[
+            InlineKeyboardButton(text="Добавить всех пользователей ✅", callback_data="add_all_users"),
+            InlineKeyboardButton(text="Добавить с подпиской ✅", callback_data="add_active_users")
+        ]]
+
+        # Кнопки для пользователей
+        for user in users:
+            buttons.append([InlineKeyboardButton(
+                text=f"{user['username']} ({user['user_id']}) {'✅' if user['selected'] else ''}",
+                callback_data=UserSelectCallback(user_id=user['user_id']).pack()
+              )])
+
+        # Кнопки пагинации
+        pagination_buttons = [
+            InlineKeyboardButton(text="⬅️ Назад", callback_data=UserPaginationCallback(page=page, action="previous").pack()) if page > 1 else InlineKeyboardButton(text="⬅️ Назад", callback_data="noop"),
+            InlineKeyboardButton(text=f"{page}", callback_data="noop"),
+            InlineKeyboardButton(text="Вперед ➡️", callback_data=UserPaginationCallback(page=page, action="next").pack()) if has_next else InlineKeyboardButton(text="Вперед ➡️", callback_data="noop"),
+        ]
+        pagination_buttons = [button for button in pagination_buttons if button is not None]
+
+        buttons.append(pagination_buttons)
+
+        buttons.append([InlineKeyboardButton(text="Отменить всех ❌", callback_data="cancel_all")])
+        buttons.append([InlineKeyboardButton(text="Сохранить", callback_data="save")])
+        buttons.append([InlineKeyboardButton(text='Отменить', callback_data='cancel')])
+
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    @staticmethod
+    async def show_notify_change_cancel() -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+
+        edit_message = InlineKeyboardButton(text="✏️ Изменить текст", callback_data="edit_message")
+        send_notification = InlineKeyboardButton(text="📤 Отправить уведомление", callback_data="send_notification")
+        cancel_button = InlineKeyboardButton(text='Отменить', callback_data='cancel')
+
+        # Добавляем кнопки "Изменить текст" и "Отправить уведомление" в одну строку
+        keyboard.add(edit_message, send_notification)
+        # Вставляем кнопку "Отменить" в новую строку
+        keyboard.add(cancel_button)
+
+        # Настройка: максимум по две кнопки в строке
+        keyboard.adjust(2)
+
+        return keyboard.as_markup()
+
+

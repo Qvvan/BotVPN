@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config_data import config
 from database.init_db import DataBase
 from handlers.admin import add_server, key_info, unban_user, block_key, cancel, refund, del_key, \
-    unblock_key, help_info, ban_user
+    unblock_key, help_info, ban_user, pushes
 from handlers.services import payments_service
 from handlers.user import subs
 from handlers.user import start, support, createorder
@@ -76,6 +76,7 @@ async def main():
     dp.include_router(refund.router)
     dp.include_router(unban_user.router)
     dp.include_router(unblock_key.router)
+    dp.include_router(pushes.router)
 
     dp.include_router(cancel.router)
 

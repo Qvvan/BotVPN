@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Integer, DateTime, Enum, BigInteger
+from sqlalchemy import Column, String, Integer, DateTime, Enum, BigInteger, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -67,3 +67,12 @@ class Servers(Base):
     cert_sha256 = Column(String, nullable=False)
     limit = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Pushes(Base):
+    __tablename__ = 'pushes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message = Column(String, nullable=False)
+    user_ids = Column(ARRAY(Integer), default=[])
+    timestamp = Column(DateTime, default=datetime.utcnow)

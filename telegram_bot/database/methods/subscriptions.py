@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from logger.logging_config import logger
-from models.models import Subscriptions, Services
+from models.models import Subscriptions, Services, Users, SubscriptionStatusEnum
 
 
 class SubscriptionMethods:
@@ -101,3 +101,27 @@ class SubscriptionMethods:
         except SQLAlchemyError as e:
             await logger.log_error(f"Ошибка при удалении подписки с ID {subscription_id}", e)
             raise
+
+
+    async def get_active_subscribers(self):
+        """Получение всех пользователей с активной подпиской."""
+        try:
+            query = (
+                select(Users.user_id, Users.username, Subscriptions.subscription_id)
+                .join(Subscriptions, Users.user_id == Subscriptions.user_id)
+                .where(Subscriptions.status == 'ACTIVE')
+            )
+            result = await self.session.execute(query)
+            active_subscribers = result.mappings().all()
+            return active_subscribers
+        except SQLAlchemyError as e:
+            await logger.log_error("Ошибка при получении активных подписчиков", e)
+            return []
+
+    async def get_active_subscribed_users(self):
+        try:
+            result = await self.session.execute(select(Subscriptions.user_id).where(Subscriptions.status == SubscriptionStatusEnum.ACTIVE))
+            return result.scalars().all()
+        except SQLAlchemyError as e:
+            await logger.log_error("Error fetching active subscribed users", e)
+            return []

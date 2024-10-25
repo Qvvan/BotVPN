@@ -1,4 +1,4 @@
-from database.methods import services, users, subscriptions, server, transactions
+from database.methods import services, users, subscriptions, server, transactions, pushes
 
 
 class MethodsManager:
@@ -10,3 +10,4 @@ class MethodsManager:
         self.subscription = subscriptions.SubscriptionMethods(self.session)
         self.services = services.ServiceMethods(self.session)
         self.servers = server.ServerMethods(self.session)
+        self.pushes = pushes.PushesMethods(self.session)
