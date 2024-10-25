@@ -8,8 +8,8 @@ class OutlineManager:
             cert_sha256=cert_sha256,
         )
 
-    async def create_key(self, user_id: str):
-        return self.server.create_key(name=user_id, key_id=user_id)
+    async def create_key(self, user_id: str, encrypted_part: str):
+        return self.server.create_key(name=user_id, key_id=encrypted_part)
 
     async def delete_key(self, key_id):
         return self.server.delete_key(key_id=key_id)
