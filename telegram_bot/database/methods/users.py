@@ -15,9 +15,7 @@ class UserMethods:
         try:
             result = await self.session.execute(select(Users).filter_by(user_id=user_id))
             user = result.scalars().first()
-            if user is not None:
-                return user
-            return False
+            return user
         except SQLAlchemyError as e:
             await logger.log_error(f"Error checking if user exists", e)
             return False
@@ -54,3 +52,25 @@ class UserMethods:
             return False
         except Exception as e:
             await logger.log_error(f"Error unbanning user", e)
+
+    async def get_paginated_users(self, page: int, limit: int):
+        try:
+            offset = (page - 1) * limit
+            result = await self.session.execute(
+                select(Users).offset(offset).limit(limit)
+            )
+            users = result.scalars().all()
+            has_next = len(users) == limit
+            return users, has_next
+        except SQLAlchemyError as e:
+            await logger.log_error("Error fetching paginated users", e)
+            return [], False
+
+    async def get_all_users(self):
+        try:
+            result = await self.session.execute(select(Users))
+            users = result.scalars().all()
+            return users
+        except SQLAlchemyError as e:
+            await logger.log_error("Error fetching all users", e)
+            return False
