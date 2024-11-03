@@ -42,21 +42,8 @@ services:
     networks:
       - bot-network
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx_server
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./html:/usr/share/nginx/html:ro
-    networks:
-      - bot-network
-
-
 volumes:
   postgres_data:
-  redis_data:
 
 networks:
   bot-network:

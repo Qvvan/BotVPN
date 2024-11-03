@@ -10,13 +10,18 @@ class CancelTransaction(StatesGroup):
     waiting_for_transaction = State()
 
 
-class ChoiceServer(StatesGroup):
+class ChoiceService(StatesGroup):
     waiting_for_choice = State()
     waiting_for_services = State()
 
 
+class ChoiceServer(StatesGroup):
+    waiting_for_choice = State()
+
+
 class AddAdmin(StatesGroup):
-    waiting_json = State()
+    waiting_ip = State()
+    waiting_name = State()
     waiting_limit = State()
 
 
@@ -42,3 +47,12 @@ class BanUser(StatesGroup):
 
 class UnbanUser(StatesGroup):
     waiting_user_id = State()
+
+
+class ChoiceApp(StatesGroup):
+    waiting_choice_app = State()
+
+
+class ServerManagementStates(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_limit = State()

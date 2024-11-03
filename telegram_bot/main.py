@@ -8,13 +8,15 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config_data import config
 from database.init_db import DataBase
 from handlers.admin import add_server, key_info, unban_user, block_key, cancel, refund, del_key, \
-    unblock_key, help_info, ban_user, pushes
-from handlers.services import payments_service
-from handlers.user import subs
+    unblock_key, help_info, ban_user, pushes, show_servers
+from handlers.services import payments_service, guide_install
+from handlers.user import subs, replace_server, replace_app
 from handlers.user import start, support, createorder
 from keyboards.set_menu import set_main_menu
 from logger.logging_config import logger
 from middleware.logging_middleware import CallbackLoggingMiddleware, MessageLoggingMiddleware
+from utils import check_servers
+from utils.check_servers import ping_servers
 from utils.subscription_checker import run_checker
 
 
@@ -65,6 +67,9 @@ async def main():
     dp.include_router(start.router)
     dp.include_router(support.router)
     dp.include_router(payments_service.router)
+    dp.include_router(replace_server.router)
+    dp.include_router(replace_app.router)
+    dp.include_router(guide_install.router)
 
     # admin-handlers
     dp.include_router(add_server.router)
@@ -77,10 +82,13 @@ async def main():
     dp.include_router(unban_user.router)
     dp.include_router(unblock_key.router)
     dp.include_router(pushes.router)
+    dp.include_router(check_servers.router)
+    dp.include_router(show_servers.router)
 
     dp.include_router(cancel.router)
 
     asyncio.create_task(run_checker(bot))
+    asyncio.create_task(ping_servers(bot))
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:

@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -10,12 +11,12 @@ class ServerMethods:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def server_exists(self, api_url: str) -> bool:
+    async def server_exists(self, server_ip: str) -> bool:
         """
         Проверяет, существует ли сервер с данным api_url в базе данных.
         """
         try:
-            result = await self.session.execute(select(Servers).filter_by(api_url=api_url))
+            result = await self.session.execute(select(Servers).filter_by(server_ip=server_ip))
             server = result.scalars().first()
             return server is not None
         except SQLAlchemyError as e:
@@ -27,17 +28,15 @@ class ServerMethods:
         Добавляет сервер в базу данных, если его еще нет.
         """
         try:
-            server_id = server_data.get("SERVER_ID")
+            server_ip = server_data.get("SERVER_IP")
             name = server_data.get("NAME")
-            api_url = server_data.get("API_URL")
-            cert_sha256 = server_data.get("CERT_SHA256")
+            limit = server_data.get("LIMIT")
 
-            if not await self.server_exists(api_url):
+            if not await self.server_exists(server_ip):
                 new_server = Servers(
-                    server_id=server_id,
+                    server_ip=server_ip,
                     name=name,
-                    api_url=api_url,
-                    cert_sha256=cert_sha256
+                    limit=limit
                 )
                 self.session.add(new_server)
 
@@ -66,3 +65,18 @@ class ServerMethods:
         except SQLAlchemyError as e:
             await logger.log_error(f"Error fetching servers from the database", e)
             return []
+
+    async def update_server(self, server_ip, **kwargs):
+        """
+        Универсальное обновление сервера в базе данных.
+        server_ip: str - IP адрес сервера, который необходимо обновить
+        kwargs: dict - поля для обновления и их значения
+        """
+        try:
+            await self.session.execute(
+                update(Servers).where(Servers.server_ip == server_ip).values(**kwargs)
+            )
+            await self.session.commit()
+        except SQLAlchemyError as e:
+            await logger.log_error(f"Error updating server {server_ip}", e)
+            raise

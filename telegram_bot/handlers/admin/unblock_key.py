@@ -7,7 +7,6 @@ from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
 from logger.logging_config import logger
-from outline.outline_manager.outline_manager import OutlineManager
 from state.state import UnblockKey
 
 router = Router()
@@ -45,8 +44,6 @@ async def unblock_key(vpn_code: str, session) -> dict:
     :param session: сессия базы данных
     :return: dict с результатом операции
     """
-    manager = OutlineManager()
-    await manager.wait_for_initialization()
 
     try:
         vpn_key_info = await session.vpn_keys.get_key_id(vpn_code)
@@ -57,7 +54,6 @@ async def unblock_key(vpn_code: str, session) -> dict:
             return {'success': False, 'message': 'Ключ уже разблокирован'}
 
         await session.vpn_keys.update_limit(vpn_key_id=vpn_key_info.vpn_key_id, new_limit=0)
-        await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
 
         return {'success': True, 'message': 'Ключ успешно разблокирован'}
 

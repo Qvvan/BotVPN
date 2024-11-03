@@ -7,8 +7,7 @@ from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from state.state import ChoiceServer
-
+from state.state import ChoiceService
 from utils.invoice_helper import send_invoice
 
 router = Router()
@@ -21,10 +20,10 @@ async def create_order(message: Message, state: FSMContext):
         reply_markup=await InlineKeyboards.create_order_keyboards()
     )
 
-    await state.set_state(ChoiceServer.waiting_for_services)
+    await state.set_state(ChoiceService.waiting_for_services)
 
 
-@router.callback_query(ServiceCallbackFactory.filter(), ChoiceServer.waiting_for_services)
+@router.callback_query(ServiceCallbackFactory.filter(), ChoiceService.waiting_for_services)
 async def handle_service_callback(callback_query: CallbackQuery, callback_data: ServiceCallbackFactory):
     service_id = int(callback_data.service_id)
     await callback_query.message.delete()
@@ -43,7 +42,7 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
             )
         except Exception as e:
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
-                             f'При формирование кнопки оплаты произошла ошибка', e)
+                                   f'При формирование кнопки оплаты произошла ошибка', e)
             await callback_query.message.edit_text(text="Что-то пошло не так, обратитесь в техподдержку")
 
 
@@ -67,4 +66,4 @@ async def handle_subscribe(callback: CallbackQuery, state: FSMContext):
         reply_markup=await InlineKeyboards.create_order_keyboards()
     )
 
-    await state.set_state(ChoiceServer.waiting_for_services)
+    await state.set_state(ChoiceService.waiting_for_services)

@@ -15,7 +15,7 @@ class CustomLogger:
             level=logging.INFO
         )
 
-    async def notify_group(self, message: str, error: Exception = None):
+    async def notify_group(self, message: str, error: Exception = None, keyboard=None):
         """Оповещение в соответствующую группу (ошибки или информация)."""
         group_id = config.ERROR_GROUP_ID if error else config.INFO_GROUP_ID
         notification_type = "🚨 Ошибка:\n" if error else "ℹ️ Информация:\n"
@@ -27,21 +27,25 @@ class CustomLogger:
                 token=config.BOT_TOKEN,
                 default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         ) as bot:
-            await bot.send_message(chat_id=group_id, text=f"{notification_type}{message}{error_message}")
+            await bot.send_message(
+                chat_id=group_id,
+                text=f"{notification_type}{message}{error_message}",
+                reply_markup=keyboard
+            )
 
     async def log_info(self, message: str):
         """Логгирование информации и отправка уведомления."""
         self.logger.info(message)
         await self.notify_group(message)
 
-    async def log_error(self, message: str, error: Exception):
+    async def log_error(self, message: str, error: Exception, keyboard=None):
         """Логгирование ошибки и отправка уведомления."""
         full_message = f"{message}. Error: {str(error)}"
         self.logger.error(full_message)
-        await self.notify_group(message, error)
+        await self.notify_group(message, error, keyboard)
 
     async def info(self, message):
-        self.logger.error(message)
+        self.logger.info(message)
 
     async def error(self, message: str, error):
         full_message = f"{message}. Error: {str(error)}"

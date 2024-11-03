@@ -1,8 +1,10 @@
 from aiogram import Router, F
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import InlineKeyboards, SubscriptionCallbackFactory
+from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 
@@ -12,7 +14,7 @@ router = Router()
 
 
 @router.message(Command(commands='subs'))
-async def get_user_subs(message: Message):
+async def get_user_subs(message: Message, state: FSMContext):
     user_id = message.from_user.id
     async with DatabaseContextManager() as session:
         try:
@@ -20,31 +22,32 @@ async def get_user_subs(message: Message):
             if subscription_data is None:
                 await message.answer(text=LEXICON_RU['not_exists'])
                 return
+            await message.answer(
+                text="Все твои подписки",
+                reply_markup=await ReplyKeyboards.get_menu_help()
+            )
             for data in subscription_data:
-                start_date = data.start_date
                 end_date = data.end_date
-                dynamic_key = data.dynamic_key
-                service_name = data.name
+                key = data.key
                 status = data.status
+                name_app = data.name_app
+                server_name = data.server_name
 
                 parseSubs = (
-                    f"📶 Статус: {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
-                    f"💼 Услуга: {service_name}\n\n"
-                    f"📆 Дата начала: {start_date.strftime('%Y-%m-%d')}\n"
-                    f"📆 Дата окончания: {end_date.strftime('%Y-%m-%d')}\n\n"
-                    f"🔑 Ключ:\n"
-                    f"<pre>{dynamic_key}</pre>"
+                    f"<b>📶 Статус:</b> {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
+                    f"<b>📱 Приложение:</b> {name_app}\n"
+                    f"<b>🌐 Страна:</b> {server_name}\n"
+                    f"<b>📆 Дата окончания:</b> {end_date.strftime('%Y-%m-%d')}\n"
+                    f"<b>🔑 Ключ:</b>\n"
+                    f"<pre>{key}</pre>"
                 )
 
-                if status == 'истекла':
-                    keyboard = await InlineKeyboards.extend_subscription(data.subscription_id)
-                    await message.answer(
-                        text=parseSubs,
-                        reply_markup=keyboard,
-                        parse_mode="HTML"
-                    )
-                else:
-                    await message.answer(text=parseSubs, parse_mode="HTML")
+                await message.answer(
+                    text=parseSubs,
+                    parse_mode="HTML",
+                    reply_markup=await InlineKeyboards.menu_subs(data.subscription_id, name_app)
+                )
+                await state.update_data(server_ip=data.server_ip)
 
         except Exception as e:
             await logger.log_error(f'Пользователь: @{message.from_user.username}\n'

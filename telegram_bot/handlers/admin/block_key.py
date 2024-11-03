@@ -7,7 +7,6 @@ from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
 from logger.logging_config import logger
-from outline.outline_manager.outline_manager import OutlineManager
 from state.state import KeyBlock
 
 router = Router()
@@ -45,8 +44,7 @@ async def block_key(vpn_code: str, session) -> dict:
     :param session: сессия базы данных
     :return: dict с результатом операции
     """
-    manager = OutlineManager()
-    await manager.wait_for_initialization()
+
 
     try:
         # Получаем информацию о VPN ключе
@@ -58,7 +56,6 @@ async def block_key(vpn_code: str, session) -> dict:
             return {'success': False, 'message': 'Ключ уже заблокирован'}
 
         await session.vpn_keys.update_limit(vpn_key_id=vpn_key_info.vpn_key_id, new_limit=1)
-        await manager.upd_limit(vpn_key_info.server_id, vpn_key_info.outline_key_id)
 
         return {'success': True, 'message': 'Ключ успешно заблокирован'}
 

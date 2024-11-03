@@ -12,6 +12,11 @@ class SubscriptionStatusEnum(str, Enum):
     CANCELED = 'отменена'
 
 
+class NameApp(str, Enum):
+    OUTLINE = 'Outline'
+    VLESS = 'Vless'
+
+
 class Users(Base):
     __tablename__ = 'users'
 
@@ -32,6 +37,24 @@ class Services(Base):
 
 class Subscriptions(Base):
     __tablename__ = 'subscriptions'
+
+    subscription_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False)
+    service_id = Column(Integer, nullable=True)
+    key = Column(String, nullable=True)
+    key_id = Column(Integer, nullable=True)
+    server_ip = Column(String, nullable=True)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    status = Column(String, default=SubscriptionStatusEnum.ACTIVE)
+    name_app = Column(String, nullable=True)
+    reminder_sent = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SubscriptionsHistory(Base):
+    __tablename__ = 'subscriptions_history'
 
     subscription_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)
@@ -61,11 +84,10 @@ class Transactions(Base):
 class Servers(Base):
     __tablename__ = 'servers'
 
-    server_id = Column(String, primary_key=True)
+    server_ip = Column(String, primary_key=True)
     name = Column(String, nullable=False)
-    api_url = Column(String, unique=True, nullable=False)
-    cert_sha256 = Column(String, nullable=False)
     limit = Column(Integer, nullable=True)
+    hidden = Column(Integer, nullable=True, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

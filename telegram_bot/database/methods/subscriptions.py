@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from logger.logging_config import logger
-from models.models import Subscriptions, Services, Users, SubscriptionStatusEnum
+from models.models import Subscriptions, Services, Users, SubscriptionStatusEnum, Servers
 
 
 class SubscriptionMethods:
@@ -18,15 +18,20 @@ class SubscriptionMethods:
                 select(
                     Subscriptions.start_date,
                     Subscriptions.end_date,
-                    Subscriptions.dynamic_key,
+                    Subscriptions.key,
+                    Subscriptions.key_id,
+                    Subscriptions.name_app,
+                    Subscriptions.server_ip,
                     Services.name,
                     Subscriptions.status,
                     Subscriptions.subscription_id,
                     Services.duration_days,
                     Services.price,
                     Services.service_id,
+                    Servers.name.label('server_name')
                 ).select_from(Subscriptions)
                 .join(Services, Subscriptions.service_id == Services.service_id)
+                .join(Servers, Subscriptions.server_ip == Servers.server_ip)
                 .filter(Subscriptions.user_id == user_id)
             )
 
@@ -43,27 +48,30 @@ class SubscriptionMethods:
     async def update_sub(self, sub: Subscriptions):
         try:
             result = await self.session.execute(select(Subscriptions).filter_by(
-                user_id=sub.user_id,
-                dynamic_key=sub.dynamic_key,
+                subscription_id=sub.subscription_id
             ))
             existing_sub = result.scalars().first()
 
             if not existing_sub:
                 await self.create_sub(sub)
             else:
-                existing_sub.service_id = sub.service_id
-                existing_sub.dynamic_key = sub.dynamic_key
-                existing_sub.start_date = sub.start_date
-                existing_sub.end_date = sub.end_date
-                existing_sub.updated_at = datetime.now()
-                existing_sub.status = sub.status
-                existing_sub.reminder_sent = sub.reminder_sent
+                updatable_fields = [
+                    'service_id', 'key', 'key_id', 'server_ip', 'start_date',
+                    'end_date', 'status', 'name_app', 'reminder_sent'
+                ]
+
+                for field in updatable_fields:
+                    new_value = getattr(sub, field, None)
+                    if new_value is not None:
+                        setattr(existing_sub, field, new_value)
+
+                existing_sub.updated_at = datetime.utcnow()
 
                 self.session.add(existing_sub)
 
             return True
         except SQLAlchemyError as e:
-            await logger.log_error(f"Error updating subscription", e)
+            await logger.log_error("Error updating subscription", e)
             raise
 
     async def create_sub(self, sub: Subscriptions):
@@ -102,14 +110,13 @@ class SubscriptionMethods:
             await logger.log_error(f"Ошибка при удалении подписки с ID {subscription_id}", e)
             raise
 
-
     async def get_active_subscribers(self):
         """Получение всех пользователей с активной подпиской."""
         try:
             query = (
                 select(Users.user_id, Users.username, Subscriptions.subscription_id)
                 .join(Subscriptions, Users.user_id == Subscriptions.user_id)
-                .where(Subscriptions.status == 'ACTIVE')
+                .where(Subscriptions.status == SubscriptionStatusEnum.ACTIVE)
             )
             result = await self.session.execute(query)
             active_subscribers = result.mappings().all()
@@ -120,8 +127,20 @@ class SubscriptionMethods:
 
     async def get_active_subscribed_users(self):
         try:
-            result = await self.session.execute(select(Subscriptions.user_id).where(Subscriptions.status == SubscriptionStatusEnum.ACTIVE))
+            result = await self.session.execute(
+                select(Subscriptions.user_id)
+                .where(Subscriptions.status == SubscriptionStatusEnum.ACTIVE)
+            )
             return result.scalars().all()
         except SQLAlchemyError as e:
             await logger.log_error("Error fetching active subscribed users", e)
             return []
+
+    async def get_subscription_by_id(self, subscription_id):
+        try:
+            # Указываем, что фильтруем по полю `id`
+            result = await self.session.execute(select(Subscriptions).filter(Subscriptions.subscription_id == subscription_id))
+            return result.scalar_one_or_none()
+        except SQLAlchemyError as e:
+            await logger.log_error("Error fetching subscription by ID", e)
+            return None  # Возвращаем None, если произошла ошибка

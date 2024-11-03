@@ -6,7 +6,6 @@ from config_data.config import ADMIN_IDS
 from database.context_manager import DatabaseContextManager
 from filters.admin import IsAdmin
 from keyboards.kb_inline import InlineKeyboards
-from outline.outline_manager.outline_manager import OutlineManager
 from state.state import DeleteKey
 
 router = Router()
@@ -44,8 +43,6 @@ async def delete_key(vpn_code, session):
     :param session: сессия базы данных
     :return: dict с результатом операции
     """
-    manager = OutlineManager()
-    await manager.wait_for_initialization()
 
     try:
         vpn_key_info = await session.vpn_keys.get_key_id(vpn_code)
@@ -53,7 +50,6 @@ async def delete_key(vpn_code, session):
             return {'success': False, 'message': 'Такого ключа не существует'}
 
         await session.vpn_keys.del_key(vpn_code)
-        await manager.delete_key(vpn_key_info.server_id, vpn_key_info.outline_key_id)
 
         return {'success': True, 'message': 'Ключ успешно удален'}
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -5,6 +7,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database.context_manager import DatabaseContextManager
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
+from models.models import NameApp
+
+
+class ServerCallbackData(CallbackData, prefix="server_disable"):
+    action: str
+    server_ip: str
 
 
 class UserPaginationCallback(CallbackData, prefix="user"):
@@ -22,8 +30,19 @@ class ServiceCallbackFactory(CallbackData, prefix='service'):
 
 class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
     action: str
-    subscription_id: int
+    subscription_id: Optional[int] = None
+    name_app: Optional[str] = None
 
+
+class ServerSelectCallback(CallbackData, prefix="servers"):
+    server_ip: str
+    server_name: str
+
+
+class GuideSelectCallback(CallbackData, prefix="guide"):
+    action: str
+    name_oc: str
+    name_app: str
 
 
 class InlineKeyboards:
@@ -50,6 +69,38 @@ class InlineKeyboards:
                 keyboard.row(
                     InlineKeyboardButton(text='Отмена', callback_data='cancel')
                 )
+
+                return keyboard.as_markup()
+            except Exception as e:
+                await logger.log_error(f'Произошла ошибка при формирование услуг', e)
+
+    @staticmethod
+    async def get_servers(ip) -> InlineKeyboardMarkup:
+        async with DatabaseContextManager() as session_methods:
+            try:
+                keyboard = InlineKeyboardBuilder()
+                servers = await session_methods.servers.get_all_servers()
+                buttons: list[InlineKeyboardButton] = []
+
+                for server in servers:
+                    server_ip = server.server_ip
+                    server_name = server.name
+
+                    callback_data = ServerSelectCallback(
+                        server_ip=server_ip,
+                        server_name=server_name
+                    ).pack()
+
+                    buttons.append(InlineKeyboardButton(
+                        text=server_name if server_ip != ip else server_name + "(Текущий)",
+                        callback_data=callback_data))
+                keyboard.row(*buttons)
+
+                keyboard.row(
+                    InlineKeyboardButton(text='Отмена', callback_data='cancel')
+                )
+
+                keyboard.adjust(1)
 
                 return keyboard.as_markup()
             except Exception as e:
@@ -135,6 +186,26 @@ class InlineKeyboards:
                 callback_data=SubscriptionCallbackFactory(
                     action='new_order',
                     subscription_id=subscription_id
+                ).pack()),
+        )
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def menu_subs(subscription_id, name_app):
+        keyboard = InlineKeyboardBuilder()
+        keyboard.add(
+            InlineKeyboardButton(
+                text='🆕 Сменить локацию',
+                callback_data=SubscriptionCallbackFactory(
+                    action='replace_server',
+                    subscription_id=subscription_id,
+                ).pack()),
+            InlineKeyboardButton(
+                text='🔄 Сменить приложение',
+                callback_data=SubscriptionCallbackFactory(
+                    action='replace_app',
+                    subscription_id=subscription_id,
+                    name_app=name_app
                 ).pack()),
         )
         return keyboard.as_markup()
@@ -231,13 +302,17 @@ class InlineKeyboards:
             buttons.append([InlineKeyboardButton(
                 text=f"{user['username']} ({user['user_id']}) {'✅' if user['selected'] else ''}",
                 callback_data=UserSelectCallback(user_id=user['user_id']).pack()
-              )])
+            )])
 
         # Кнопки пагинации
         pagination_buttons = [
-            InlineKeyboardButton(text="⬅️ Назад", callback_data=UserPaginationCallback(page=page, action="previous").pack()) if page > 1 else InlineKeyboardButton(text="⬅️ Назад", callback_data="noop"),
+            InlineKeyboardButton(text="⬅️ Назад", callback_data=UserPaginationCallback(page=page,
+                                                                                       action="previous").pack()) if page > 1 else InlineKeyboardButton(
+                text="⬅️ Назад", callback_data="noop"),
             InlineKeyboardButton(text=f"{page}", callback_data="noop"),
-            InlineKeyboardButton(text="Вперед ➡️", callback_data=UserPaginationCallback(page=page, action="next").pack()) if has_next else InlineKeyboardButton(text="Вперед ➡️", callback_data="noop"),
+            InlineKeyboardButton(text="Вперед ➡️", callback_data=UserPaginationCallback(page=page,
+                                                                                        action="next").pack()) if has_next else InlineKeyboardButton(
+                text="Вперед ➡️", callback_data="noop"),
         ]
         pagination_buttons = [button for button in pagination_buttons if button is not None]
 
@@ -267,4 +342,55 @@ class InlineKeyboards:
 
         return keyboard.as_markup()
 
+    @staticmethod
+    async def replace_app(name_app) -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        if name_app == NameApp.OUTLINE:
+            button = InlineKeyboardButton(text="VLESS", callback_data=SubscriptionCallbackFactory(
+                action='name_app', name_app="VLESS").pack())
+        else:
+            button = InlineKeyboardButton(text="OUTLINE", callback_data=SubscriptionCallbackFactory(
+                action='name_app', name_app="OUTLINE").pack())
+        keyboard.add(button)
 
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def show_guide(name_app) -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        vless = InlineKeyboardButton(text="VLESS", callback_data=GuideSelectCallback(
+            action='show_guide', name_oc=name_app, name_app='vless').pack())
+        outline = InlineKeyboardButton(text="OUTLINE", callback_data=GuideSelectCallback(
+            action='show_guide', name_oc=name_app, name_app='outline').pack())
+        back = InlineKeyboardButton(text="Назад", callback_data=GuideSelectCallback(
+            action='show_guide', name_oc=name_app, name_app='back').pack())
+        keyboard.row(vless, outline)
+        keyboard.add(back)
+        keyboard.adjust(2, 1)
+
+        return keyboard.as_markup()
+
+    @staticmethod
+    async def server_management_options(server_ip, hidden_status) -> InlineKeyboardMarkup:
+        keyboard = InlineKeyboardBuilder()
+        if hidden_status == 0:
+            show_status = InlineKeyboardButton(
+                text="Выключить сервер",
+                callback_data=ServerCallbackData(action="disable", server_ip=server_ip).pack()
+            )
+        else:
+            show_status = InlineKeyboardButton(
+                text="Включить сервер",
+                callback_data=ServerCallbackData(action="enable", server_ip=server_ip).pack()
+            )
+        server_name = InlineKeyboardButton(
+            text="Изменить имя",
+            callback_data=ServerCallbackData(action="change_name", server_ip=server_ip).pack()
+        )
+        server_limit = InlineKeyboardButton(
+            text="Изменить лимит",
+            callback_data=ServerCallbackData(action="change_limit", server_ip=server_ip).pack()
+        )
+        keyboard.add(show_status, server_name, server_limit)
+
+        return keyboard.as_markup()

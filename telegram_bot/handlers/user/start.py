@@ -43,4 +43,3 @@ async def handle_know_more(callback: CallbackQuery):
         text=LEXICON_RU['know_more'],
         reply_markup=await InlineKeyboards.support_and_subscribe_keyboard()
     )
-
