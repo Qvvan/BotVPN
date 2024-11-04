@@ -161,7 +161,7 @@ class InlineKeyboards:
         )
         install_guide_button = InlineKeyboardButton(
             text="Инструкция по установке 📄",
-            callback_data="install_guide"
+            callback_data="back_to_device_selection"
         )
 
         keyboard.row(support_button)

@@ -2,8 +2,11 @@ import asyncio
 from datetime import datetime, timedelta
 
 from aiogram import Bot
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.context_manager import DatabaseContextManager
+from keyboards.kb_inline import SubscriptionCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import Subscriptions, SubscriptionStatusEnum
@@ -44,9 +47,20 @@ async def process_subscription(bot: Bot, sub, current_date, session_methods):
 
 
 async def send_reminder(bot: Bot, sub, session_methods):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(
+        InlineKeyboardButton(
+            text='⏳ Продлить подписку',
+            callback_data=SubscriptionCallbackFactory(
+                action='extend_subscription',
+                subscription_id=sub.subscription_id
+            ).pack())
+    )
+
     await bot.send_message(
         chat_id=sub.user_id,
         text=LEXICON_RU['reminder_sent'],
+        reply_markup=keyboard.as_markup(),
         parse_mode="HTML"
     )
 
