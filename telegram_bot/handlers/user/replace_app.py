@@ -11,7 +11,6 @@ from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import NameApp
 from models.models import Subscriptions
-from state.state import ChoiceApp
 
 router = Router()
 
@@ -34,10 +33,9 @@ async def get_support(callback_query: CallbackQuery, state: FSMContext, callback
         reply_markup=await InlineKeyboards.replace_app(name_app),
         parse_mode='HTML',
     )
-    await state.set_state(ChoiceApp.waiting_choice_app)
 
 
-@router.callback_query(SubscriptionCallbackFactory.filter(F.action("name_app")) and ChoiceApp.waiting_choice_app)
+@router.callback_query(SubscriptionCallbackFactory.filter(F.action == "name_app"))
 async def handle_server_selection(callback_query: CallbackQuery,
                                   state: FSMContext):
     message = await callback_query.message.edit_text("🔄 Меняем приложение...")
@@ -66,13 +64,11 @@ async def handle_server_selection(callback_query: CallbackQuery,
                     username=username,
                 )
                 await session_methods.subscription.update_sub(
-                    Subscriptions(
                         subscription_id=subscription_id,
                         user_id=user_id,
                         key_id=key_id,
                         name_app=name_app,
                         key=key,
-                    )
                 )
                 vless_manager.delete_key(old_key_id)
 
@@ -84,13 +80,11 @@ async def handle_server_selection(callback_query: CallbackQuery,
                     username=username,
                 )
                 await session_methods.subscription.update_sub(
-                    Subscriptions(
                         subscription_id=subscription_id,
                         user_id=user_id,
                         key_id=key_id,
                         name_app=name_app,
                         key=key
-                    )
                 )
                 shadowsocks_manager.delete_key(old_key_id)
 

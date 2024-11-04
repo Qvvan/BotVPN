@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
@@ -26,12 +27,19 @@ class UserSelectCallback(CallbackData, prefix="user_select"):
 
 class ServiceCallbackFactory(CallbackData, prefix='service'):
     service_id: str
+    status_pay: str
 
 
 class SubscriptionCallbackFactory(CallbackData, prefix="subscription"):
     action: str
     subscription_id: Optional[int] = None
     name_app: Optional[str] = None
+
+
+class ReplaceServerCallbackFactory(CallbackData, prefix="serv"):
+    action: str
+    subscription_id: Optional[int] = None
+    server_ip: str
 
 
 class ServerSelectCallback(CallbackData, prefix="servers"):
@@ -45,9 +53,14 @@ class GuideSelectCallback(CallbackData, prefix="guide"):
     name_app: str
 
 
+class StatusPay(Enum):
+    NEW = "new"
+    OLD = "old"
+
+
 class InlineKeyboards:
     @staticmethod
-    async def create_order_keyboards() -> InlineKeyboardMarkup:
+    async def create_order_keyboards(status_pay: StatusPay) -> InlineKeyboardMarkup:
         """Клавиатура для кнопок с услугами."""
         async with DatabaseContextManager() as session_methods:
             try:
@@ -61,6 +74,7 @@ class InlineKeyboards:
 
                     callback_data = ServiceCallbackFactory(
                         service_id=service_id,
+                        status_pay=status_pay.value
                     ).pack()
 
                     buttons.append(InlineKeyboardButton(text=service_name, callback_data=callback_data))
@@ -75,7 +89,7 @@ class InlineKeyboards:
                 await logger.log_error(f'Произошла ошибка при формирование услуг', e)
 
     @staticmethod
-    async def get_servers(ip) -> InlineKeyboardMarkup:
+    async def get_servers(ip) -> InlineKeyboardMarkup | int:
         async with DatabaseContextManager() as session_methods:
             try:
                 keyboard = InlineKeyboardBuilder()
@@ -83,6 +97,8 @@ class InlineKeyboards:
                 buttons: list[InlineKeyboardButton] = []
 
                 for server in servers:
+                    if server.hidden == 1:
+                        continue
                     server_ip = server.server_ip
                     server_name = server.name
 
@@ -94,6 +110,9 @@ class InlineKeyboards:
                     buttons.append(InlineKeyboardButton(
                         text=server_name if server_ip != ip else server_name + "(Текущий)",
                         callback_data=callback_data))
+
+                if len(buttons) == 0:
+                    return 0
                 keyboard.row(*buttons)
 
                 keyboard.row(
@@ -158,47 +177,18 @@ class InlineKeyboards:
         keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
         return keyboard.as_markup()
 
-    @staticmethod
-    async def extend_subscription(subscription_id: int) -> InlineKeyboardMarkup:
-        keyboard = InlineKeyboardBuilder()
-        keyboard.add(InlineKeyboardButton(
-            text='🔄 Продлить подписку',
-            callback_data=SubscriptionCallbackFactory(
-                action='extend_subscription',
-                subscription_id=subscription_id,
-            ).pack()
-        ))
-        return keyboard.as_markup()
 
     @staticmethod
-    async def extend_subscription_options(subscription_id) -> InlineKeyboardMarkup:
-
+    async def menu_subs(subscription_id, name_app, server_ip):
         keyboard = InlineKeyboardBuilder()
-        keyboard.add(
-            InlineKeyboardButton(
-                text='🔄 Продлить',
-                callback_data=SubscriptionCallbackFactory(
-                    action='extend_with_key',
-                    subscription_id=subscription_id
-                ).pack()),
-            InlineKeyboardButton(
-                text='🆕 Новая услуга',
-                callback_data=SubscriptionCallbackFactory(
-                    action='new_order',
-                    subscription_id=subscription_id
-                ).pack()),
-        )
-        return keyboard.as_markup()
-
-    @staticmethod
-    async def menu_subs(subscription_id, name_app):
-        keyboard = InlineKeyboardBuilder()
+        # Добавляем две кнопки для первой строки
         keyboard.add(
             InlineKeyboardButton(
                 text='🆕 Сменить локацию',
-                callback_data=SubscriptionCallbackFactory(
-                    action='replace_server',
+                callback_data=ReplaceServerCallbackFactory(
+                    action='rep_serv',
                     subscription_id=subscription_id,
+                    server_ip=server_ip
                 ).pack()),
             InlineKeyboardButton(
                 text='🔄 Сменить приложение',
@@ -207,16 +197,25 @@ class InlineKeyboards:
                     subscription_id=subscription_id,
                     name_app=name_app
                 ).pack()),
+            InlineKeyboardButton(
+                text='⏳ Продлить подписку',
+                callback_data=SubscriptionCallbackFactory(
+                    action='extend_subscription',
+                    subscription_id=subscription_id
+                ).pack())
         )
+
+        keyboard.adjust(2, 1)
+
         return keyboard.as_markup()
 
     @staticmethod
-    async def get_back_button_keyboard() -> InlineKeyboardMarkup:
+    async def get_back_button_keyboard(callback: str = "back_to_support_menu") -> InlineKeyboardMarkup:
         keyboard = InlineKeyboardBuilder()
 
         back_button = InlineKeyboardButton(
             text="🔙 Назад",
-            callback_data="back_to_support_menu"
+            callback_data=callback
         )
 
         keyboard.add(back_button)

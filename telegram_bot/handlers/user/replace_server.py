@@ -6,40 +6,45 @@ from database.context_manager import DatabaseContextManager
 from handlers.services.get_session_cookies import get_session_cookie
 from handlers.services.key_create import ShadowsocksKeyManager, VlessKeyManager
 from keyboards.kb_inline import InlineKeyboards, ServerSelectCallback, \
-    SubscriptionCallbackFactory
+    SubscriptionCallbackFactory, ReplaceServerCallbackFactory
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
 from models.models import NameApp
-from models.models import Subscriptions
-from state.state import ChoiceServer
 
 router = Router()
+
 
 class ServerUnavailableError(Exception):
     """Кастомное исключение для недоступного сервера."""
     pass
 
 
-@router.callback_query(SubscriptionCallbackFactory.filter(F.action == 'replace_server'))
+@router.callback_query(ReplaceServerCallbackFactory.filter(F.action == 'rep_serv'))
 async def get_support(callback_query: CallbackQuery, state: FSMContext, callback_data: SubscriptionCallbackFactory):
     await callback_query.answer()
     subscription_id = callback_data.subscription_id
-    state_data = await state.get_data()
-    server_ip = state_data.get("server_ip")
+    server_ip = callback_data.server_ip
 
     await state.update_data(
         subscription_id=subscription_id,
     )
+    keyboad = await InlineKeyboards.get_servers(server_ip)
+    if not keyboad:
+        error_message = ("😔 К сожалению, доступные серверы не найдены.\nПожалуйста, попробуйте позже.\n"
+                         "Мы работаем над тем, чтобы всё снова заработало! 🙏")
 
-    await callback_query.message.answer(
-        text='Выбери подходящую для себя локацию',
-        reply_markup=await InlineKeyboards.get_servers(server_ip),
-    )
-    await state.set_state(ChoiceServer.waiting_for_choice)
+        await callback_query.message.answer(
+            text=error_message
+        )
+    else:
+        await callback_query.message.answer(
+            text='Выбери подходящую для себя локацию из предложенного списка ниже:',
+            reply_markup=keyboad
+        )
 
 
-@router.callback_query(ServerSelectCallback.filter(), ChoiceServer.waiting_for_choice)
+@router.callback_query(ServerSelectCallback.filter())
 async def handle_server_selection(callback_query: CallbackQuery, callback_data: ServerSelectCallback,
                                   state: FSMContext):
     message = await callback_query.message.edit_text("🔄 Меняем локацию...")
@@ -84,14 +89,12 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
                         f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
 
                 await session_methods.subscription.update_sub(
-                        Subscriptions(
-                            subscription_id=subscription_id,
-                            user_id=user_id,
-                            key_id=key_id,
-                            key=key,
-                            server_ip=selected_server_ip
-                        )
-                    )
+                    subscription_id=subscription_id,
+                    user_id=user_id,
+                    key_id=key_id,
+                    key=key,
+                    server_ip=selected_server_ip
+                )
 
             elif subscription.name_app == NameApp.VLESS:
                 vless_manager = VlessKeyManager(selected_server_ip, session_cookie)
@@ -109,13 +112,11 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
                     await logger.log_error(
                         f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
                 await session_methods.subscription.update_sub(
-                    Subscriptions(
-                        subscription_id=subscription_id,
-                        user_id=user_id,
-                        key_id=key_id,
-                        key=key,
-                        server_ip=selected_server_ip
-                    )
+                    subscription_id=subscription_id,
+                    user_id=user_id,
+                    key_id=key_id,
+                    key=key,
+                    server_ip=selected_server_ip
                 )
 
             await message.edit_text(

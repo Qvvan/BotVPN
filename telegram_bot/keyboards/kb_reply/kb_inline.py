@@ -6,8 +6,8 @@ class ReplyKeyboards:
     async def get_menu_install_app() -> ReplyKeyboardMarkup:
         keyboard = ReplyKeyboardMarkup(keyboard=[
             [KeyboardButton(text="Android 📱"), KeyboardButton(text="iPhone 🍏")],
-            [KeyboardButton(text="Windows/MacOS 💻"), KeyboardButton(text="Телевизор 📺")],
-            # [KeyboardButton(text="Главное меню 🏠")]
+            [KeyboardButton(text="Windows 💻"), KeyboardButton(text="MacOS 💻")],
+            [KeyboardButton(text="Телевизор 📺")]
         ], resize_keyboard=True)
         return keyboard
 

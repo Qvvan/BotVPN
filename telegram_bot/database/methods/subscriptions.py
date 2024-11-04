@@ -45,33 +45,29 @@ class SubscriptionMethods:
             await logger.log_error(f"Error retrieving subscription", e)
             return None
 
-    async def update_sub(self, sub: Subscriptions):
+    async def update_sub(self, subscription_id, **kwargs):
+        """
+        Универсальное обновление подписки в базе данных.
+        subscription_id: str - ID подписки, которую необходимо обновить
+        kwargs: dict - поля для обновления и их значения
+        """
         try:
-            result = await self.session.execute(select(Subscriptions).filter_by(
-                subscription_id=sub.subscription_id
-            ))
+            result = await self.session.execute(
+                select(Subscriptions).filter_by(subscription_id=subscription_id)
+            )
             existing_sub = result.scalars().first()
 
-            if not existing_sub:
-                await self.create_sub(sub)
-            else:
-                updatable_fields = [
-                    'service_id', 'key', 'key_id', 'server_ip', 'start_date',
-                    'end_date', 'status', 'name_app', 'reminder_sent'
-                ]
-
-                for field in updatable_fields:
-                    new_value = getattr(sub, field, None)
-                    if new_value is not None:
-                        setattr(existing_sub, field, new_value)
-
-                existing_sub.updated_at = datetime.utcnow()
+            if existing_sub:
+                kwargs['updated_at'] = datetime.utcnow()
+                for field, value in kwargs.items():
+                    setattr(existing_sub, field, value)
 
                 self.session.add(existing_sub)
 
             return True
+
         except SQLAlchemyError as e:
-            await logger.log_error("Error updating subscription", e)
+            await logger.log_error(f"Error updating subscription {subscription_id}", e)
             raise
 
     async def create_sub(self, sub: Subscriptions):

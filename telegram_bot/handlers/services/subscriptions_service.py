@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from database.context_manager import DatabaseContextManager
@@ -8,11 +9,14 @@ from handlers.services.create_subscription_service import SubscriptionService
 from handlers.services.create_transaction_service import TransactionService
 from handlers.services.get_session_cookies import get_session_cookie
 from handlers.services.key_create import ShadowsocksKeyManager
-from keyboards.kb_inline import InlineKeyboards
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from models.models import Subscriptions, SubscriptionStatusEnum, SubscriptionsHistory, NameApp
+from models.models import SubscriptionStatusEnum
+
+
+class NoAvailableServersError(Exception):
+    pass
 
 
 class SubscriptionsService:
@@ -37,6 +41,10 @@ class SubscriptionsService:
             Exception: Если не удалось сохранить транзакцию или создать подписку.
         """
         async with DatabaseContextManager() as session_methods:
+            shadowsocks_manager = None
+            key_id = None
+            error_message = None
+
             try:
                 # Извлечение информации о платеже из сообщения
                 in_payload = message.successful_payment.invoice_payload.split(':')
@@ -50,41 +58,70 @@ class SubscriptionsService:
                 if not transaction_state:
                     raise Exception("Ошибка сохранения транзакции")
 
+                # Получение списка всех серверов с проверкой статуса hidden
                 server_ips = await session_methods.servers.get_all_servers()
-                if server_ips:
-                    random_server = random.choice(server_ips)
-                    server_ip = random_server.server_ip
-                else:
-                    raise Exception("В базе данных нет ни одного сервера")
+                available_servers = [server for server in server_ips if server.hidden == 0]
 
-                session_cookie = await get_session_cookie(server_ip)
+                # Перемешивание списка серверов
+                random.shuffle(available_servers)
+
+                # Перебор серверов, чтобы найти работающий
+                server_ip = None
+                session_cookie = None
+                for server in available_servers:
+                    try:
+                        session_cookie = await get_session_cookie(server.server_ip)
+                        if session_cookie:
+                            server_ip = server.server_ip
+                            break
+                    except Exception as e:
+                        await logger.error(f"Сервер {server.server_ip} не доступен", e)
+
+                if not server_ip:
+                    error_message = "На данный момент нет доступных серверов 😔. Мы уже сообщили в техподдержку, и скоро все исправим! Спасибо за ваше терпение 💙"
+                    await logger.log_error(
+                        message=f"Пользователь: @{message.from_user.username} попытался оформить подписку, но ни один сервер не ответил",
+                        error="Не удалось получить сессию ни по одному из серверов"
+                    )
+                    raise NoAvailableServersError("нет доступных серверов")
+
+                # Управление Shadowsocks ключами
                 shadowsocks_manager = ShadowsocksKeyManager(server_ip, session_cookie)
                 key, key_id = shadowsocks_manager.manage_shadowsocks_key(
                     tg_id=str(user_id),
                     username=username,
                 )
 
+                # Создание подписки
                 subscription_created = await SubscriptionService.create_subscription(
                     message, key, key_id, server_ip, session_methods
                 )
                 if not subscription_created:
                     raise Exception("Ошибка создания подписки")
 
+                # Коммит сессии после успешных операций
                 await session_methods.session.commit()
                 await SubscriptionsService.send_success_response(message, key)
                 await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
                                       f"Оформил подписку на {duration_date} дней")
 
             except Exception as e:
-                await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
-                                       f"Error during transaction processing", e)
-                await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
+                if isinstance(e, NoAvailableServersError):
+                    # Сообщение уже отправлено пользователю, обработка завершена
+                    await message.answer(text=error_message)
+                else:
+                    await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                                           f"Error during transaction processing", e)
+                    await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
+
                 await SubscriptionsService.refund_payment(message)
 
                 # Откат транзакции
                 await session_methods.session.rollback()
 
-                shadowsocks_manager.delete_key(key_id)
+                # Удаление ключа только если shadowsocks_manager и key_id существуют
+                if shadowsocks_manager and key_id:
+                    shadowsocks_manager.delete_key(key_id)
 
                 # Сохранение транзакции с отменой
                 await TransactionService.create_transaction(
@@ -93,19 +130,20 @@ class SubscriptionsService:
                 await session_methods.session.commit()
 
     @staticmethod
-    async def extend_sub_successful_payment(message: Message):
+    async def extend_sub_successful_payment(message: Message, state: FSMContext):
         """
         Обрабатывает успешное продление подписки для пользователя.
 
         Args:
             message (Message): Сообщение от Telegram, содержащее информацию о платеже.
+            state (FSMContext): Состояние для подписки, которую будем продлять.
         """
         async with DatabaseContextManager() as session_methods:
             try:
                 in_payload = message.successful_payment.invoice_payload.split(':')
-                service_id = int(in_payload[0])
                 durations_days = in_payload[1]
-                subscription_id = int(in_payload[3])
+                user_data = await state.get_data()
+                subscription_id = user_data.get('subscription_id')
 
                 # Получение текущей подписки пользователя
                 subs = await session_methods.subscription.get_subscription(message.from_user.id)
@@ -118,21 +156,17 @@ class SubscriptionsService:
 
                     for sub in subs:
                         if sub.subscription_id == subscription_id:
-                            subscription_data = {
-                                "user_id": message.from_user.id,
-                                "service_id": service_id,
-                                "dynamic_key": sub.dynamic_key,
-                                "start_date": datetime.now(),
-                                "end_date": datetime.now() + timedelta(days=int(durations_days)),
-                                "updated_at": datetime.now(),
-                                "status": SubscriptionStatusEnum.ACTIVE
-                            }
-
-                            subscription = Subscriptions(**subscription_data)
-                            subscription_history = SubscriptionsHistory(**subscription_data)
-
-                            await session_methods.subscription.update_sub(subscription)
-                            await session_methods.subscription.create_sub(subscription_history)
+                            if datetime.now() > sub.end_date:
+                                new_end_date = datetime.now() + timedelta(days=int(durations_days))
+                            else:
+                                new_end_date = sub.end_date + timedelta(days=int(durations_days))
+                            await session_methods.subscription.update_sub(
+                                subscription_id=sub.subscription_id,
+                                end_date=new_end_date,
+                                updated_at=datetime.now(),
+                                status=SubscriptionStatusEnum.ACTIVE,
+                                reminder_sent=0
+                            )
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             await session_methods.session.commit()
                             await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
@@ -153,20 +187,6 @@ class SubscriptionsService:
                     message, status='отмена', description=str(e), session_methods=session_methods
                 )
                 await session_methods.session.commit()
-
-    @staticmethod
-    async def extend_with_key(message: Message):
-        """
-        Логика продления подписки с использованием нового ключа.
-
-        Этот метод будет использоваться для продления подписки с использованием нового ключа доступа.
-        Его реализация будет зависеть от требований системы.
-
-        Args:
-            callback (telegram.CallbackQuery): Запрос от Telegram с данными callback.
-            callback_data (dict): Данные, переданные вместе с callback.
-        """
-        pass
 
     @staticmethod
     async def send_success_response(message: Message, vpn_key: str):

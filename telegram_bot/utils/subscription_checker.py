@@ -50,30 +50,22 @@ async def send_reminder(bot: Bot, sub, session_methods):
         parse_mode="HTML"
     )
 
-    await session_methods.subscription.update_sub(Subscriptions(
-        user_id=sub.user_id,
-        service_id=sub.service_id,
-        dynamic_key=sub.dynamic_key,
-        start_date=sub.start_date,
-        end_date=sub.end_date,
-        status=sub.status,
+    await session_methods.subscription.update_sub(
+        subscription_id=sub.subscription_id,
         reminder_sent=1
-    ))
+    )
     await session_methods.session.commit()
     await logger.log_info(
-        f"Подписка {sub.subscription_id} истечет через 3 дня. Ключ {sub.dynamic_key} будет заблокирован."
+        f"Подписка у пользователя с ID {sub.user_id} истечет через 3 дня.\nКлюч <pre>{sub.key}</pre> будет заблокирован."
     )
 
 
 async def handle_expired_subscription(bot: Bot, sub, session_methods):
-    await session_methods.subscription.update_sub(Subscriptions(
-        user_id=sub.user_id,
-        service_id=sub.service_id,
-        dynamic_key=sub.dynamic_key,
-        start_date=sub.start_date,
-        end_date=sub.end_date,
+    await session_methods.subscription.update_sub(
+        subscription_id=sub.subscription_id,
         status=SubscriptionStatusEnum.EXPIRED,
-    ))
+        reminder_sent=0,
+    )
 
     await session_methods.session.commit()
     await bot.send_message(
@@ -81,7 +73,7 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
         text=LEXICON_RU['expired'],
     )
     await logger.log_info(
-        f"Подписка {sub.subscription_id} истекла. Ключ {sub.dynamic_key} заблокирован."
+        f"Подписка у пользователя с ID {sub.user_id} истекла.\nКлюч <pre>{sub.key}</pre> заблокирован."
     )
 
 
@@ -93,11 +85,11 @@ async def handle_subscription_deletion(sub, session_methods):
 
     await session_methods.session.commit()
     await logger.log_info(
-        f"Подписка {sub.subscription_id} полностью удалена. Ключ {sub.dynamic_key} удалён."
+        f"Подписка у пользователя с ID {sub.user_id} полностью удалена.\nКлюч <pre>{sub.key}</pre> удалён."
     )
 
 
 async def run_checker(bot: Bot):
     while True:
         await check_subscriptions(bot)
-        await asyncio.sleep(3600)
+        await asyncio.sleep(3)
