@@ -17,6 +17,11 @@ class NameApp(str, Enum):
     VLESS = 'Vless'
 
 
+class StatusSubscriptionHistory(str, Enum):
+    NEW_SUBSCRIPTION = 'новая подписка'
+    EXTENSION = 'продление'
+
+
 class Users(Base):
     __tablename__ = 'users'
 
@@ -57,13 +62,11 @@ class SubscriptionsHistory(Base):
     __tablename__ = 'subscriptions_history'
 
     subscription_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, nullable=False)
-    service_id = Column(Integer, nullable=False)
-    dynamic_key = Column(String, nullable=False)
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
-    status = Column(String, default=SubscriptionStatusEnum.ACTIVE)
-    reminder_sent = Column(Integer, default=0)
+    user_id = Column(BigInteger, nullable=True)
+    service_id = Column(Integer, nullable=True)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    status = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

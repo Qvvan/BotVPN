@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from logger.logging_config import logger
-from models.models import Subscriptions, SubscriptionsHistory, NameApp
+from models.models import Subscriptions, NameApp, StatusSubscriptionHistory
 
 
 class SubscriptionService:
@@ -28,7 +28,18 @@ class SubscriptionService:
 
             created_subscription = await session_methods.subscription.create_sub(subscription)
 
-            return created_subscription is not None
+            if created_subscription:
+                status = StatusSubscriptionHistory.NEW_SUBSCRIPTION
+                await session_methods.subscription_history.create_history_entry(
+                    user_id=subscription_data["user_id"],
+                    service_id=subscription_data["service_id"],
+                    start_date=subscription_data["start_date"],
+                    end_date=subscription_data["end_date"],
+                    status=status
+                )
+                return True
+
+            return False
         except Exception as e:
             await logger.log_error(f"Пользователь: @{message.from_user.username}" 
                              f"Ошибка при создании подписки", e)

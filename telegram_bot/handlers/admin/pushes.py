@@ -1,19 +1,21 @@
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import UserPaginationCallback, InlineKeyboards, UserSelectCallback
+from logger.logging_config import logger
 
 router = Router()
+
 
 @router.message(Command(commands="pushes"))
 async def start_broadcast(message: types.Message, state: FSMContext):
     """Начало показа пользователей с кнопками навигации."""
     async with DatabaseContextManager() as session_methods:
         users = await session_methods.users.get_all_users()
-        users_dict = {user.user_id: {'user_id': user.user_id, 'username': user.username, 'selected': False} for user in users}
+        users_dict = {user.user_id: {'user_id': user.user_id, 'username': user.username, 'selected': False} for user in
+                      users}
         await state.update_data(users=users_dict)
     page = 1
     await show_users(message, page, users_dict)
@@ -31,6 +33,7 @@ async def select_user(callback_query: types.CallbackQuery, callback_data: UserSe
     await show_users(callback_query.message, page, users_dict)
     await callback_query.answer()
     await state.update_data(current_page=page)
+
 
 @router.callback_query(lambda call: call.data in ['add_all_users', 'add_active_users', 'cancel_all'])
 async def handle_special_buttons(callback_query: types.CallbackQuery, state: FSMContext):
@@ -66,6 +69,7 @@ async def handle_save_button(callback_query: types.CallbackQuery, state: FSMCont
     await callback_query.message.edit_text("Напишите текст для уведомления")
     await state.set_state("waiting_for_message_text")
 
+
 @router.message(StateFilter("waiting_for_message_text"))
 async def handle_message_text(message: types.Message, state: FSMContext):
     if not message.text:
@@ -82,6 +86,7 @@ async def handle_message_text(message: types.Message, state: FSMContext):
     )
     await state.set_state(None)
 
+
 @router.callback_query(lambda call: call.data == 'edit_message')
 async def edit_message(callback_query: types.CallbackQuery, state: FSMContext):
     await callback_query.message.answer("Напишите новый текст для уведомления")
@@ -95,18 +100,31 @@ async def send_notification(callback_query: types.CallbackQuery, state: FSMConte
     selected_users = data.get('selected_users', [])
 
     if not message_text:
-        await callback_query.answer("Текст уведомления отсутствует. Пожалуйста, задайте текст перед отправкой.", show_alert=True)
+        await callback_query.answer("Текст уведомления отсутствует. Пожалуйста, задайте текст перед отправкой.",
+                                    show_alert=True)
         return
 
     count = 0
+    successful_user_ids = []
+
     for user in selected_users:
         try:
             await callback_query.bot.send_message(chat_id=user['user_id'], text=message_text)
+            successful_user_ids.append(user['user_id'])  # Сохраняем ID успешного отправления
             count += 1
         except Exception as e:
             await callback_query.message.answer(f"Ошибка при отправке пользователю {user['user_id']}: {e}")
 
-    await callback_query.answer(f"Уведомление отправлено {count} пользователям.", show_alert=True, cache_time=2)
+    # Отправляем уведомление об успешной рассылке
+    await callback_query.answer(f"Уведомление отправлено {count} пользователям.", show_alert=True, cache_time=3)
+    await callback_query.message.edit_text('Готово 🎉\n')
+
+    async with DatabaseContextManager() as session_methods:
+        try:
+            await session_methods.pushes.add_push_record(message=message_text, user_ids=successful_user_ids)
+        except Exception as e:
+            await logger.log_error("Не удалось добавить в базу данных данную информацию", e)
+
 
 @router.callback_query(UserPaginationCallback.filter())
 async def paginate_users(callback_query: types.CallbackQuery, callback_data: UserPaginationCallback, state: FSMContext):

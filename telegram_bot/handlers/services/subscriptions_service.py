@@ -12,7 +12,7 @@ from handlers.services.key_create import ShadowsocksKeyManager
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from models.models import SubscriptionStatusEnum
+from models.models import SubscriptionStatusEnum, StatusSubscriptionHistory
 
 
 class NoAvailableServersError(Exception):
@@ -166,6 +166,13 @@ class SubscriptionsService:
                                 updated_at=datetime.now(),
                                 status=SubscriptionStatusEnum.ACTIVE,
                                 reminder_sent=0
+                            )
+                            await session_methods.subscription_history.create_history_entry(
+                                user_id=message.from_user.id,
+                                service_id=sub.service_id,
+                                start_date=sub.start_date,
+                                end_date=new_end_date,
+                                status=StatusSubscriptionHistory.EXTENSION
                             )
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             await session_methods.session.commit()
