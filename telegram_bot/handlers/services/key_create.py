@@ -61,6 +61,22 @@ class BaseKeyManager:
             async with session.post(delete_api_url, headers=self.headers, ssl=False) as response:
                 if response.status == 200:
                     print(f"Key with ID {key_id} successfully deleted.")
+                elif response.status == 401:
+                    # Получаем новый session_cookie
+                    session_cookie = await get_session_cookie(self.server_ip)
+                    # Обновляем заголовок Cookie
+                    self.headers["Cookie"] = f"lang=ru-RU; 3x-ui={session_cookie}"
+                    # Повторяем запрос с обновленной сессией
+                    async with session.post(delete_api_url, headers=self.headers, ssl=False) as retry_response:
+                        if retry_response.status == 200:
+                            print(f"Key with ID {key_id} successfully deleted after refreshing session.")
+                        else:
+                            error_text = await retry_response.text()
+                            print(f"Error deleting key after retry: {retry_response.status}, {error_text}")
+                            raise aiohttp.ClientResponseError(
+                                retry_response.request_info, retry_response.history,
+                                status=retry_response.status, message=error_text
+                            )
                 else:
                     error_text = await response.text()
                     print(f"Error deleting key: {response.status}, {error_text}")
@@ -87,6 +103,22 @@ class BaseKeyManager:
             async with session.post(update_api_url, headers=self.headers, json=update_data, ssl=False) as response:
                 if response.status == 200:
                     print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
+                elif response.status == 401:
+                    # Получаем новый session_cookie
+                    session_cookie = await get_session_cookie(self.server_ip)
+                    # Обновляем заголовок Cookie
+                    self.headers["Cookie"] = f"lang=ru-RU; 3x-ui={session_cookie}"
+                    # Повторяем запрос с обновленной сессией
+                    async with session.post(update_api_url, headers=self.headers, json=update_data, ssl=False) as retry_response:
+                        if retry_response.status == 200:
+                            print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'} after refreshing session.")
+                        else:
+                            error_text = await retry_response.text()
+                            print(f"Error updating key after retry: {retry_response.status}, {error_text}")
+                            raise aiohttp.ClientResponseError(
+                                retry_response.request_info, retry_response.history,
+                                status=retry_response.status, message=error_text
+                            )
                 else:
                     error_text = await response.text()
                     print(f"Error updating key: {response.status}, {error_text}")
