@@ -13,7 +13,7 @@ async def get_session_cookie(server_ip: str) -> str:
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, ssl=False, timeout=2) as response:
+            async with session.post(url, json=payload, ssl=False, timeout=5) as response:
                 if response.status == 200:
                     set_cookie_headers = response.headers.getall("Set-Cookie")
                     session_value = None
