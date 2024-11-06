@@ -5,7 +5,7 @@
 venv/
 __pycache__/
 .idea
-outline/config_outline/secret.py
+telegram_bot/outline/config_outline/secret.py
 
 bot.log
 *.log

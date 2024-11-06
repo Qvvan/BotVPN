@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   telegram-bot:
-    build: .
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
     container_name: telegram-bot
     restart: always
     env_file:
       - .env
     depends_on:
       - db
-    volumes:
-      - .:/app
     command: python main.py
     networks:
       - bot-network
