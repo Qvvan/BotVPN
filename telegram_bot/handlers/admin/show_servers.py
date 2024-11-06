@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
+from config_data.config import PORT_X_UI, MY_SECRET_URL
 from database.context_manager import DatabaseContextManager
 from handlers.services.get_session_cookies import get_session_cookie
 from keyboards.kb_inline import InlineKeyboards, ServerCallbackData
@@ -30,7 +31,8 @@ async def show_servers_handler(message: types.Message, state: FSMContext):
             f"Название: {server.name} 📌\n"
             f"IP: {server.server_ip} 🌐\n"
             f"Статус: {status}\n"
-            f"В БД: {hidden_status}"
+            f"В БД: {hidden_status}\n"
+            f"[Панель сервера](https://{server.server_ip}:{PORT_X_UI}/{MY_SECRET_URL}/panel/)"
         )
 
         await message.answer(text=text, reply_markup=await InlineKeyboards.server_management_options(server.server_ip,
