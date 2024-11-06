@@ -3,10 +3,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from database.context_manager import DatabaseContextManager
+from handlers.services.get_session_cookies import get_session_cookie
 from keyboards.kb_inline import InlineKeyboards, ServerCallbackData
 from logger.logging_config import logger
 from state.state import ServerManagementStates
-from utils.check_servers import is_server_reachable
 
 router = Router()
 
@@ -22,7 +22,7 @@ async def show_servers_handler(message: types.Message, state: FSMContext):
             return
 
     for server in servers:
-        reachable = await is_server_reachable(server.server_ip)
+        reachable = await get_session_cookie(server.server_ip)
         status = "✅ Доступен" if reachable else "❌ Недоступен"
         hidden_status = "🟢 Включен" if server.hidden == 0 else "🔴 Выключен"
 

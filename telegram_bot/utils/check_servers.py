@@ -2,25 +2,18 @@ import asyncio
 from datetime import datetime, timedelta
 
 from aiogram import Bot, Router
+from aiogram.client.session import aiohttp
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from config_data.config import PORT_X_UI, MY_SECRET_URL
 from database.context_manager import DatabaseContextManager
+from handlers.services.get_session_cookies import get_session_cookie
 from keyboards.kb_inline import ServerCallbackData
 from logger.logging_config import logger
 
 notification_dict = {}
 
 router = Router()
-
-
-async def is_server_reachable(server):
-    proc = await asyncio.create_subprocess_shell(
-        f"ping -c 1 {server}",
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL
-    )
-    await proc.communicate()
-    return proc.returncode == 0
 
 
 async def ping_servers(bot: Bot):
@@ -38,9 +31,8 @@ async def ping_servers(bot: Bot):
             if server.hidden == 1:
                 continue
 
-            reachable = await is_server_reachable(server.server_ip)
+            reachable = await get_session_cookie(server.server_ip)
             if reachable:
-                await logger.info(f'Server {server.server_ip} is reachable.')
                 if server.server_ip in notification_dict:
                     del notification_dict[server.server_ip]
             else:

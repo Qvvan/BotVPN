@@ -87,7 +87,7 @@ class SubscriptionsService:
 
                 # Управление Shadowsocks ключами
                 shadowsocks_manager = ShadowsocksKeyManager(server_ip, session_cookie)
-                key, key_id = shadowsocks_manager.manage_shadowsocks_key(
+                key, key_id = await shadowsocks_manager.manage_shadowsocks_key(
                     tg_id=str(user_id),
                     username=username,
                 )
@@ -121,7 +121,7 @@ class SubscriptionsService:
 
                 # Удаление ключа только если shadowsocks_manager и key_id существуют
                 if shadowsocks_manager and key_id:
-                    shadowsocks_manager.delete_key(key_id)
+                    await shadowsocks_manager.delete_key(key_id)
 
                 # Сохранение транзакции с отменой
                 await TransactionService.create_transaction(

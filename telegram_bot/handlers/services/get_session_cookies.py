@@ -15,11 +15,14 @@ async def get_session_cookie(server_ip: str) -> str:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, ssl=False, timeout=2) as response:
                 if response.status == 200:
-                    # Получаем значение заголовка Set-Cookie
-                    set_cookie_header = response.headers.get("Set-Cookie")
-                    if set_cookie_header and "session=" in set_cookie_header:
-                        # Извлекаем значение после "session=" и до точки с запятой
-                        session_value = set_cookie_header.split("session=", 1)[1].split(";")[0]
+                    set_cookie_headers = response.headers.getall("Set-Cookie")
+                    session_value = None
+                    for header in set_cookie_headers:
+                        if "3x-ui" in header:
+                            session_value = header.split("3x-ui=", 1)[1].split(";")[0]
+
+                    if session_value:
                         return session_value
     except Exception as e:
-        await logger.log_error("Ошибка при получении сессионного ключа", server_ip)
+        await logger.log_error(f"Ошибка при получении сессионного ключа {server_ip}", e)
+

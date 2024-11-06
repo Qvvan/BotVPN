@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery
 
 from database.context_manager import DatabaseContextManager
 from handlers.services.get_session_cookies import get_session_cookie
-from handlers.services.key_create import ShadowsocksKeyManager, VlessKeyManager
+from handlers.services.key_create import ShadowsocksKeyManager, VlessKeyManager, ServerUnavailableError
 from keyboards.kb_inline import InlineKeyboards, ServerSelectCallback, \
     SubscriptionCallbackFactory, ReplaceServerCallbackFactory
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
@@ -13,11 +13,6 @@ from logger.logging_config import logger
 from models.models import NameApp
 
 router = Router()
-
-
-class ServerUnavailableError(Exception):
-    """Кастомное исключение для недоступного сервера."""
-    pass
 
 
 @router.callback_query(ReplaceServerCallbackFactory.filter(F.action == 'rep_serv'))
@@ -74,16 +69,15 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
 
             if subscription.name_app == NameApp.OUTLINE:
                 shadowsocks_manager = ShadowsocksKeyManager(selected_server_ip, session_cookie)
-                key, key_id = shadowsocks_manager.manage_shadowsocks_key(
+                key, key_id = await shadowsocks_manager.manage_shadowsocks_key(
                     tg_id=str(user_id),
                     username=username,
                 )
                 try:
-                    session_cookie = await get_session_cookie(subscription.server_ip)
                     if not session_cookie:
                         raise ServerUnavailableError("Старый сервер недоступен, ключ не может быть удален")
                     shadowsocks_manager = ShadowsocksKeyManager(subscription.server_ip, session_cookie)
-                    shadowsocks_manager.delete_key(old_key_id)
+                    await shadowsocks_manager.delete_key(old_key_id)
                 except ServerUnavailableError as e:
                     await logger.log_error(
                         f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
@@ -98,7 +92,7 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
 
             elif subscription.name_app == NameApp.VLESS:
                 vless_manager = VlessKeyManager(selected_server_ip, session_cookie)
-                key, key_id = vless_manager.manage_vless_key(
+                key, key_id = await vless_manager.manage_vless_key(
                     tg_id=str(user_id),
                     username=username,
                 )
@@ -107,7 +101,7 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
                     if not session_cookie:
                         raise ServerUnavailableError("Старый сервер недоступен, ключ не может быть удален")
                     vless_manager = VlessKeyManager(subscription.server_ip, session_cookie)
-                    vless_manager.delete_key(old_key_id)
+                    await vless_manager.delete_key(old_key_id)
                 except ServerUnavailableError as e:
                     await logger.log_error(
                         f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
@@ -133,7 +127,7 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
             )
             await session_methods.session.commit()
 
-            await state.clear()
+
 
         except ServerUnavailableError as e:
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
@@ -143,3 +137,4 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
                                    f'Ошибка при смене сервера', e)
             await callback_query.message.edit_text(text=LEXICON_RU['error'])
+        await state.clear()
