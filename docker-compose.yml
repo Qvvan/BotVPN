@@ -13,20 +13,6 @@ services:
     networks:
       - bot-network
 
-  fastapi:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    container_name: fastapi_app
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "12345:12345"
-    command: [ "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "12345", "--reload" ]
-    networks:
-      - bot-network
-
   db:
     image: postgres:16.2
     container_name: telegram-db
