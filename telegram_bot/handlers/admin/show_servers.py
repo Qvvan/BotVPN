@@ -36,7 +36,7 @@ async def show_servers_handler(message: types.Message, state: FSMContext):
         )
 
         await message.answer(text=text, reply_markup=await InlineKeyboards.server_management_options(server.server_ip,
-                                                                                                     server.hidden))
+                                                                                                     server.hidden), parse_mode="Markdown")
 
 
 @router.callback_query(ServerCallbackData.filter(F.action == "change_name"))
