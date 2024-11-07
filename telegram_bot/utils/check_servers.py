@@ -51,24 +51,24 @@ async def ping_servers(bot: Bot):
                 )
                 if server.server_ip not in notification_dict:
                     notification_dict[server.server_ip] = {}
-
-                for sub in user_subs:
-                    if server.server_ip in sub.key:
-                        user_id = sub.user_id
-                        last_notified = notification_dict[server.server_ip].get(user_id)
-                        if not last_notified or datetime.now() - last_notified > timedelta(minutes=30):
-                            try:
-                                await bot.send_message(
-                                    chat_id=user_id,
-                                    text=f"⚠️ Сервер {server.name} временно недоступен! ⚠️\n\n"
-                                         "ℹ️ Мы заметили, что этот сервер выбран в вашей подписке. "
-                                         "Пожалуйста, переключитесь на другой доступный сервер, чтобы продолжить пользоваться услугами. 🙏\n\n"
-                                         "Команда MaskNetVPN уже активно работает над устранением проблемы! 💪🔧\n\n"
-                                         "Благодарим вас за терпение и понимание! 💚"
-                                )
-                                notification_dict[server.server_ip][user_id] = datetime.now()
-                            except Exception as e:
-                                await logger.log_error(f"Ошибка отправки уведомления пользователю {user_id}", e)
+                #
+                # for sub in user_subs:
+                #     if server.server_ip in sub.key:
+                #         user_id = sub.user_id
+                #         last_notified = notification_dict[server.server_ip].get(user_id)
+                #         if not last_notified or datetime.now() - last_notified > timedelta(minutes=30):
+                #             try:
+                #                 await bot.send_message(
+                #                     chat_id=user_id,
+                #                     text=f"⚠️ Сервер {server.name} временно недоступен! ⚠️\n\n"
+                #                          "ℹ️ Мы заметили, что этот сервер выбран в вашей подписке. "
+                #                          "Пожалуйста, переключитесь на другой доступный сервер, чтобы продолжить пользоваться услугами. 🙏\n\n"
+                #                          "Команда MaskNetVPN уже активно работает над устранением проблемы! 💪🔧\n\n"
+                #                          "Благодарим вас за терпение и понимание! 💚"
+                #                 )
+                #                 notification_dict[server.server_ip][user_id] = datetime.now()
+                #             except Exception as e:
+                #                 await logger.log_error(f"Ошибка отправки уведомления пользователю {user_id}", e)
 
         current_time = datetime.now()
         for server_ip in list(notification_dict.keys()):
