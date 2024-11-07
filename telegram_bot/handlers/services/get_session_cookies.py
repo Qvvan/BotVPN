@@ -1,3 +1,6 @@
+import asyncio
+import ssl
+
 import aiohttp
 
 from config_data.config import MY_SECRET_URL, LOGIN_X_UI_PANEL, PASSWORD_X_UI_PANEL
@@ -11,11 +14,22 @@ async def get_session_cookie(server_ip: str) -> str:
         "password": PASSWORD_X_UI_PANEL
     }
 
+    # Создаем контекст SSL для отключения проверки сертификата
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, ssl=False, timeout=10) as response:
+            async with session.post(url, json=payload, ssl=ssl_context, timeout=30) as response:
+                # Логируем статус ответа
+                await logger.info(f"Статус ответа от {server_ip}: {response.status}")
+
                 if response.status == 200:
+                    # Логируем заголовки Set-Cookie
                     set_cookie_headers = response.headers.getall("Set-Cookie")
+                    await logger.info(f"Set-Cookie headers: {set_cookie_headers}")
+
                     session_value = None
                     for header in set_cookie_headers:
                         if "3x-ui" in header:
@@ -23,6 +37,19 @@ async def get_session_cookie(server_ip: str) -> str:
 
                     if session_value:
                         return session_value
+                    else:
+                        await logger.log_error(f"Сессионный ключ 3x-ui не найден в Set-Cookie заголовках от {server_ip}", set_cookie_headers)
+
+                else:
+                    await logger.log_error(f"Неудачный ответ от {server_ip}: статус {response.status}", None)
+
+    except aiohttp.ClientConnectionError as e:
+        await logger.log_error(f"Ошибка соединения с {server_ip}", e)
+    except aiohttp.ClientPayloadError as e:
+        await logger.log_error(f"Ошибка с данными запроса к {server_ip}", e)
+    except asyncio.TimeoutError as e:
+        await logger.log_error(f"Таймаут при подключении к {server_ip}", e)
     except Exception as e:
-        await logger.log_error(f"Ошибка при получении сессионного ключа {server_ip}", e)
+        await logger.log_error(f"Неизвестная ошибка при подключении к {server_ip}", e)
+
 
