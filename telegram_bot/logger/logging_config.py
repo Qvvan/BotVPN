@@ -15,7 +15,8 @@ class CustomLogger:
             level=logging.INFO
         )
 
-    async def notify_group(self, message: str, error: Exception = None, keyboard=None):
+    @staticmethod
+    async def notify_group(message: str, error: Exception = None, keyboard=None):
         """Оповещение в соответствующую группу (ошибки или информация)."""
         group_id = config.ERROR_GROUP_ID if error else config.INFO_GROUP_ID
         notification_type = "🚨 Ошибка:\n" if error else "ℹ️ Информация:\n"

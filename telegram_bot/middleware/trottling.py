@@ -5,7 +5,8 @@ from typing import *
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery
-from aiogram.utils.chat_action import logger
+
+from logger.logging_config import logger
 
 
 def rate_limit(limit: int, key=None):
@@ -49,7 +50,7 @@ class ThrottlingMiddleware(BaseMiddleware):
         try:
             result = await handler(event, data)
         except Exception as e:
-            logger.exception(e)
+            await logger.error("Ошибка в мидлваре", e)
 
         return result
 
@@ -70,11 +71,13 @@ class ThrottlingMiddleware(BaseMiddleware):
             await self.event_throttled(event, t)
             raise CancelHandler()
 
-    async def event_throttled(self, event: Message, throttled: Throttled):
-        delta = throttled.rate - throttled.delta
+    @staticmethod
+    async def event_throttled(event: Message, throttled: Throttled):
         if throttled.exceeded_count <= 2:
             await event.answer(
                 f'⚠️ Пожалуйста, не нажимай на кнопки так часто! 😅 Дай мне немного времени, чтобы обработать твой запрос')
+            await logger.log_error(f"Пользователь @{event.from_user.username} спамит сообщениями/командами", 'ФЛУД')
+
 
     async def is_throttled(self, event: Union[Message, CallbackQuery]) -> bool:
         limit = self.rate_limit

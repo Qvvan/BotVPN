@@ -32,7 +32,7 @@ async def get_user_subs(message: Message, state: FSMContext):
                 name_app = data.name_app
                 server_name = data.server_name
 
-                parseSubs = (
+                parse_subs = (
                     f"<b>📶 Статус:</b> {'🟢 Активна' if status == 'активная' else '🔴 Истекла'}\n"
                     f"<b>📱 Приложение:</b> {name_app}\n"
                     f"<b>🌐 Страна:</b> {server_name}\n"
@@ -42,7 +42,7 @@ async def get_user_subs(message: Message, state: FSMContext):
                 )
 
                 await message.answer(
-                    text=parseSubs,
+                    text=parse_subs,
                     parse_mode="HTML",
                     reply_markup=await InlineKeyboards.menu_subs(data.subscription_id, name_app, data.server_ip)
                 )

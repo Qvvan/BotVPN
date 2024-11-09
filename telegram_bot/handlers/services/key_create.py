@@ -31,10 +31,12 @@ class BaseKeyManager:
         }
         self.base_url = f"https://{server_ip}:54321/{MY_SECRET_URL}/panel"
 
-    def generate_uuid(self):
+    @staticmethod
+    def generate_uuid():
         return str(uuid.uuid4())
 
-    def generate_port(self):
+    @staticmethod
+    def generate_port():
         return random.randint(10000, 65535)
 
     async def get_inbounds(self, session):
@@ -109,9 +111,11 @@ class BaseKeyManager:
                     # Обновляем заголовок Cookie
                     self.headers["Cookie"] = f"lang=ru-RU; 3x-ui={session_cookie}"
                     # Повторяем запрос с обновленной сессией
-                    async with session.post(update_api_url, headers=self.headers, json=update_data, ssl=False) as retry_response:
+                    async with session.post(update_api_url, headers=self.headers, json=update_data,
+                                            ssl=False) as retry_response:
                         if retry_response.status == 200:
-                            print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'} after refreshing session.")
+                            print(
+                                f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'} after refreshing session.")
                         else:
                             error_text = await retry_response.text()
                             print(f"Error updating key after retry: {retry_response.status}, {error_text}")
@@ -289,7 +293,8 @@ class ShadowsocksKeyManager(BaseKeyManager):
                 })  # Сериализуем allocate в JSON строку
             }
 
-            async with session.post(create_api_url, headers=headers_with_cookie, json=new_ss_key_data, ssl=False) as response:
+            async with session.post(create_api_url, headers=headers_with_cookie, json=new_ss_key_data,
+                                    ssl=False) as response:
                 if response.status == 200:
                     response_data = await response.json()
                     response_data['password'] = new_password
@@ -330,12 +335,12 @@ class ShadowsocksKeyManager(BaseKeyManager):
                 }
 
                 # Используем session_cookie в create_shadowsocks_key
-                response = await self.create_shadowsocks_key(session, new_client, new_password, new_port, session_cookie)
+                response = await self.create_shadowsocks_key(session, new_client, new_password, new_port,
+                                                             session_cookie)
                 key_id = response.get('obj', {}).get('id')
                 return self.generate_ss_link(new_port, new_password, method, key_id), key_id
             except aiohttp.ClientResponseError as e:
                 print(f"Request error: {e}")
-
 
     def generate_ss_link(self, port, password, method, key_id):
         user_info = f"{method}:{password}".encode()

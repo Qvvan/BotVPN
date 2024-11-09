@@ -2,14 +2,14 @@ import asyncio
 from datetime import datetime, timedelta
 
 from aiogram import Bot
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import SubscriptionCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from models.models import Subscriptions, SubscriptionStatusEnum
+from models.models import SubscriptionStatusEnum
 
 
 async def check_subscriptions(bot: Bot):

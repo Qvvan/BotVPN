@@ -177,7 +177,6 @@ class InlineKeyboards:
         keyboard.add(InlineKeyboardButton(text='Отменить', callback_data='cancel'))
         return keyboard.as_markup()
 
-
     @staticmethod
     async def menu_subs(subscription_id, name_app, server_ip):
         keyboard = InlineKeyboardBuilder()
@@ -305,13 +304,27 @@ class InlineKeyboards:
 
         # Кнопки пагинации
         pagination_buttons = [
-            InlineKeyboardButton(text="⬅️ Назад", callback_data=UserPaginationCallback(page=page,
-                                                                                       action="previous").pack()) if page > 1 else InlineKeyboardButton(
-                text="⬅️ Назад", callback_data="noop"),
-            InlineKeyboardButton(text=f"{page}", callback_data="noop"),
-            InlineKeyboardButton(text="Вперед ➡️", callback_data=UserPaginationCallback(page=page,
-                                                                                        action="next").pack()) if has_next else InlineKeyboardButton(
-                text="Вперед ➡️", callback_data="noop"),
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data=UserPaginationCallback(
+                    page=page,
+                    action="previous"
+                ).pack()) if page > 1 else InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="noop"),
+            InlineKeyboardButton(
+                text=f"{page}",
+                callback_data="noop"
+            ),
+            InlineKeyboardButton(
+                text="Вперед ➡️",
+                callback_data=UserPaginationCallback(
+                    page=page,
+                    action="next"
+                ).pack()) if has_next else InlineKeyboardButton(
+                text="Вперед ➡️",
+                callback_data="noop"
+            ),
         ]
         pagination_buttons = [button for button in pagination_buttons if button is not None]
 

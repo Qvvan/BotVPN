@@ -127,8 +127,6 @@ async def handle_server_selection(callback_query: CallbackQuery, callback_data: 
             )
             await session_methods.session.commit()
 
-
-
         except ServerUnavailableError as e:
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
             await callback_query.answer("Выберите другой сервер, этот пока что недоступен.", show_alert=True)

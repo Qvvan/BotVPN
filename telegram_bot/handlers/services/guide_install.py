@@ -31,6 +31,7 @@ async def windows_macos_handler(message: Message):
         reply_markup=await InlineKeyboards.show_guide("Windows")
     )
 
+
 @router.message(lambda message: message.text == "MacOS 💻")
 async def windows_macos_handler(message: Message):
     await message.answer(

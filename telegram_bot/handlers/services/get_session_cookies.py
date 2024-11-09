@@ -22,13 +22,10 @@ async def get_session_cookie(server_ip: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, ssl=ssl_context, timeout=30) as response:
-                # Логируем статус ответа
-                await logger.info(f"Статус ответа от {server_ip}: {response.status}")
 
                 if response.status == 200:
                     # Логируем заголовки Set-Cookie
                     set_cookie_headers = response.headers.getall("Set-Cookie")
-                    await logger.info(f"Set-Cookie headers: {set_cookie_headers}")
 
                     session_value = None
                     for header in set_cookie_headers:
@@ -38,7 +35,9 @@ async def get_session_cookie(server_ip: str) -> str:
                     if session_value:
                         return session_value
                     else:
-                        await logger.log_error(f"Сессионный ключ 3x-ui не найден в Set-Cookie заголовках от {server_ip}", set_cookie_headers)
+                        await logger.log_error(
+                            f"Сессионный ключ 3x-ui не найден в Set-Cookie заголовках от {server_ip}",
+                            set_cookie_headers)
 
                 else:
                     await logger.log_error(f"Неудачный ответ от {server_ip}: статус {response.status}", None)
@@ -51,5 +50,3 @@ async def get_session_cookie(server_ip: str) -> str:
         await logger.log_error(f"Таймаут при подключении к {server_ip}", e)
     except Exception as e:
         await logger.log_error(f"Неизвестная ошибка при подключении к {server_ip}", e)
-
-
