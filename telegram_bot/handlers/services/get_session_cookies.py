@@ -36,8 +36,7 @@ async def get_session_cookie(server_ip: str) -> str:
                         return session_value
                     else:
                         await logger.log_error(
-                            f"Сессионный ключ 3x-ui не найден в Set-Cookie заголовках от {server_ip}",
-                            set_cookie_headers)
+                            f"Сессионный ключ 3x-ui не найден в Set-Cookie заголовках от {server_ip}", None)
 
                 else:
                     await logger.log_error(f"Неудачный ответ от {server_ip}: статус {response.status}", None)
