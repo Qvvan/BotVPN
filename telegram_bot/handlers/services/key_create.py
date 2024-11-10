@@ -254,17 +254,19 @@ class VlessKeyManager(BaseKeyManager):
                     client_id=new_client["id"],
                     port=port,
                     short_id=short_id,
+                    public_key=cert_data["publicKey"],
                     server_name="google.com"
                 )
                 return vless_link, key_id
             except aiohttp.ClientResponseError as e:
                 print(f"Request error: {e}")
 
-    def generate_vless_link(self, client_id, port, short_id, server_name="google.com"):
+    def generate_vless_link(self, client_id, port, short_id, public_key, server_name="google.com"):
         return (f"vless://{client_id}@{self.server_ip}:{port}"
-                f"?type=tcp&security=reality&fp=firefox"
-                f"&sni={server_name}&sid={short_id}&spx=%2F&flow=xtls-rprx-vision"
+                f"?type=tcp&security=reality&pbk={public_key}"
+                f"&fp=firefox&sni={server_name}&sid={short_id}&spx=%2F&flow=xtls-rprx-vision"
                 f"#MASKNETVPN")
+
 
 
 class ShadowsocksKeyManager(BaseKeyManager):
