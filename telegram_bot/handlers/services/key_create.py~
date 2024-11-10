@@ -176,40 +176,21 @@ class VlessKeyManager(BaseKeyManager):
             "streamSettings": json.dumps({
                 "network": "tcp",
                 "security": "reality",
-                "externalProxy": [],  # Добавлено externalProxy
                 "realitySettings": {
-                    "show": False,
-                    "xver": 0,
                     "dest": "google.com:443",
                     "serverNames": ["google.com", "www.google.com"],
                     "privateKey": private_key,
-                    "minClient": "",
-                    "maxClient": "",
-                    "maxTimediff": 0,
-                    "shortIds": [short_id, "d794e37acfc7557b", "4815a2", "af5b73d52b", "9f57", "d0", "faad19837e6869", "ea39de6417ae"],
-                    "settings": {
-                        "publicKey": public_key,
-                        "fingerprint": "firefox",
-                        "serverName": "",
-                        "spiderX": "/"
-                    }
+                    "publicKey": public_key,
+                    "shortIds": [short_id]
                 },
                 "tcpSettings": {
-                    "acceptProxyProtocol": False,
                     "header": {"type": "none"}
                 }
             }),  # Сериализуем streamSettings в JSON строку
             "sniffing": json.dumps({
                 "enabled": True,
-                "destOverride": ["http", "tls", "quic", "fakedns"],  # Добавлены дополнительные destOverride
-                "metadataOnly": False,
-                "routeOnly": False
-            }),  # Сериализуем sniffing в JSON строку
-            "allocate": json.dumps({
-                "strategy": "always",
-                "refresh": 5,
-                "concurrency": 3
-            })
+                "destOverride": ["http", "tls"]
+            })  # Сериализуем sniffing в JSON строку
         }
 
         async with session.post(create_api_url, headers=headers_with_cookie, json=new_vless_key_data,
