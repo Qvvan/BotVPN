@@ -19,8 +19,9 @@ async def show_commands(message: types.Message):
     async with DatabaseContextManager() as session_methods:
         try:
             users = await session_methods.subscription.get_active_subscribed_users()
+            count_users = len(users)
             await message.answer(
-                text=f"Активные пользователи: {users}",
+                text=f"Активные пользователи: {count_users}",
                 reply_markup=InlineKeyboardMarkup(
                     inline_keyboard=[
                         [
@@ -46,7 +47,7 @@ async def show_commands(message: types.Message):
 async def cancel_callback(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     await callback.message.edit_text(
-        text="Тут можно будет узнать список всех пользователей",
+        text="TODO: Тут можно будет узнать список всех пользователей",
         reply_markup=InlineKeyboardMarkup(
                     inline_keyboard=[
                         [

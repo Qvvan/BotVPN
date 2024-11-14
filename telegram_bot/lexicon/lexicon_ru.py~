@@ -5,7 +5,6 @@ LEXICON_COMMANDS: dict[str, str] = {
 }
 
 LEXICON_COMMANDS_ADMIN: dict[str, str] = {
-    '/active': 'Узнать количество активных пользователей и инфу о каждом из них',
     '/add_server': 'Добавить сервер в базу данных',
     '/show_servers': 'Управление серверами',
     '/pushes': 'Можно отправить уведомления пользователям',
