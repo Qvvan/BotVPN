@@ -22,8 +22,10 @@ class MessageLoggingMiddleware(BaseMiddleware):
             username = event.chat.username
             await logger.info(f"Пользователь {username} (ID: {user_id}) отправил сообщение: {event.text}")
 
-            sent_message = await event.answer("Загрузка 🔄", reply_markup=ReplyKeyboardRemove())
-            await sent_message.delete()
+            # Проверяем, не превышен ли лимит
+            if throttling_middleware and not await throttling_middleware.is_throttled(event):
+                sent_message = await event.answer("Загрузка 🔄", reply_markup=ReplyKeyboardRemove())
+                await sent_message.delete()
 
         return await handler(event, data)
 

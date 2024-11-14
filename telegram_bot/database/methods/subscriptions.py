@@ -129,7 +129,7 @@ class SubscriptionMethods:
             )
             return result.scalars().all()
         except SQLAlchemyError as e:
-            await logger.log_error("Error fetching active subscribed users", e)
+            await logger.log_error("Error fetching active.py subscribed users", e)
             return []
 
     async def get_subscription_by_id(self, subscription_id):
