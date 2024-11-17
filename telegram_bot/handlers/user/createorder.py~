@@ -7,7 +7,7 @@ from database.context_manager import DatabaseContextManager
 from keyboards.kb_inline import InlineKeyboards, ServiceCallbackFactory, StatusPay
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from handlers.services.invoice_helper import send_invoice
+from utils.invoice_helper import send_invoice
 
 router = Router()
 

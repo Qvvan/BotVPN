@@ -59,7 +59,7 @@ async def main():
     dp.message.outer_middleware(MessageLoggingMiddleware())
     dp.callback_query.outer_middleware(CallbackLoggingMiddleware())
 
-    throttling_middleware = ThrottlingMiddleware(limit=0.8)
+    throttling_middleware = ThrottlingMiddleware(limit=0.6)
     dp.message.outer_middleware(throttling_middleware)
     dp.callback_query.outer_middleware(throttling_middleware)
 

@@ -15,8 +15,6 @@ class MessageLoggingMiddleware(BaseMiddleware):
             event: Update,
             data: Dict[str, Any]
     ) -> Any:
-        throttling_middleware: ThrottlingMiddleware = data.get("throttling_middleware")
-
         if isinstance(event, Message) and not event.from_user.is_bot:
             user_id = event.chat.id
             username = event.chat.username
