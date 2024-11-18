@@ -5,7 +5,7 @@ import uuid
 
 import aiohttp
 
-from config_data.config import MY_SECRET_URL
+from config_data.config import MY_SECRET_URL, PORT_X_UI
 from handlers.services.get_session_cookies import get_session_cookie
 
 
@@ -24,12 +24,12 @@ class BaseKeyManager:
             "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
             "Connection": "keep-alive",
             "Cookie": f"lang=ru-RU; 3x-ui={session_cookie}",
-            "Origin": f"https://{server_ip}:54321",
-            "Referer": f"https://{server_ip}:54321/{MY_SECRET_URL}/panel/inbounds",
+            "Origin": f"https://{server_ip}:{PORT_X_UI}",
+            "Referer": f"https://{server_ip}:{PORT_X_UI}/{MY_SECRET_URL}/panel/inbounds",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
             "X-Requested-With": "XMLHttpRequest"
         }
-        self.base_url = f"https://{server_ip}:54321/{MY_SECRET_URL}/panel"
+        self.base_url = f"https://{server_ip}:{PORT_X_UI}/{MY_SECRET_URL}/panel"
 
     @staticmethod
     def generate_uuid():
@@ -57,7 +57,7 @@ class BaseKeyManager:
         Args:
             key_id (str): Идентификатор ключа для удаления.
         """
-        delete_api_url = f"{self.base_url}/inbound/del/{key_id}"
+        delete_api_url = f"{self.base_url}/api/inbounds/del/{key_id}"
 
         async with aiohttp.ClientSession() as session:
             async with session.post(delete_api_url, headers=self.headers, ssl=False) as response:
@@ -87,61 +87,91 @@ class BaseKeyManager:
                         status=response.status, message=error_text
                     )
 
-    async def update_key(self, key_id: str, status: bool):
+    async def update_key_enable(self, key_id: str, enable: bool):
         """
-        Обновляет статус ключа с указанным key_id.
+        Обновляет только поле `enable` для ключа с указанным key_id.
 
         Args:
             key_id (str): Идентификатор ключа для обновления.
-            status (bool): Новый статус для ключа (включен/выключен).
+            enable (bool): Новый статус для поля `enable`.
+
+        Raises:
+            ValueError: Если ключ не удалось получить или обновить.
         """
-        update_api_url = f"{self.base_url}/inbound/update/{key_id}"
-        update_data = {
-            "id": int(key_id),
-            "enable": True
-        }
+        # Получаем текущий объект ключа
+        get_api_url = f"{self.base_url}/api/inbounds/get/{key_id}"
+        update_api_url = f"{self.base_url}/api/inbounds/update/{key_id}"
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(update_api_url, headers=self.headers, json=update_data, ssl=False) as response:
-                if response.status == 200:
-                    print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
-                    response_text = await response.text()
-                    print(f"Response Status: {response.status}")
-                    print(f"Response Headers: {response.headers}")
-                    print(f"Response Body: {response_text}")
-                    print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
+            try:
+                # Запрос текущего объекта
+                async with session.get(get_api_url, headers=self.headers, ssl=False) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise ValueError(f"Failed to fetch key with ID {key_id}: {response.status}, {error_text}")
 
-                elif response.status == 401:
-                    # Получаем новый session_cookie
-                    session_cookie = await get_session_cookie(self.server_ip)
-                    # Обновляем заголовок Cookie
-                    self.headers["Cookie"] = f"lang=ru-RU; 3x-ui={session_cookie}"
-                    # Повторяем запрос с обновленной сессией
-                    async with session.post(update_api_url, headers=self.headers, json=update_data,
-                                            ssl=False) as retry_response:
-                        if retry_response.status == 200:
-                            print(
-                                f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'} after refreshing session.")
-                        else:
-                            error_text = await retry_response.text()
-                            print(f"Error updating key after retry: {retry_response.status}, {error_text}")
-                            raise aiohttp.ClientResponseError(
-                                retry_response.request_info, retry_response.history,
-                                status=retry_response.status, message=error_text
-                            )
-                else:
-                    error_text = await response.text()
-                    print(f"Error updating key: {response.status}, {error_text}")
-                    raise aiohttp.ClientResponseError(
-                        response.request_info, response.history,
-                        status=response.status, message=error_text
-                    )
+                    data = await response.json()
+                    if not data.get("success"):
+                        raise ValueError(
+                            f"API Error while fetching key with ID {key_id}: {data.get('msg', 'Unknown error')}")
+
+                    # Получаем объект ключа
+                    key_data = data["obj"]
+
+                # Обновляем только поле `enable` в объекте
+                key_data["enable"] = enable
+
+                # Если поле `settings` или `streamSettings` — строка, декодируем для обновления
+                if isinstance(key_data.get("settings"), str):
+                    key_data["settings"] = json.loads(key_data["settings"])
+                if isinstance(key_data.get("streamSettings"), str):
+                    key_data["streamSettings"] = json.loads(key_data["streamSettings"])
+                if isinstance(key_data.get("sniffing"), str):
+                    key_data["sniffing"] = json.loads(key_data["sniffing"])
+
+                # Возвращаем преобразованные строки
+                key_data["settings"] = json.dumps(key_data["settings"])
+                key_data["streamSettings"] = json.dumps(key_data["streamSettings"])
+                key_data["sniffing"] = json.dumps(key_data["sniffing"])
+
+                # Отправляем обновленный объект на сервер
+                async with session.post(update_api_url, headers=self.headers, json=key_data,
+                                        ssl=False) as update_response:
+                    if update_response.status == 200:
+                        print(f"Key with ID {key_id} successfully updated to {'enabled' if enable else 'disabled'}.")
+                    elif update_response.status == 401:
+                        # Обновляем session_cookie и повторяем запрос
+                        session_cookie = await get_session_cookie(self.server_ip)
+                        self.headers["Cookie"] = f"lang=ru-RU; 3x-ui={session_cookie}"
+
+                        async with session.post(update_api_url, headers=self.headers, json=key_data,
+                                                ssl=False) as retry_response:
+                            if retry_response.status == 200:
+                                print(f"Key with ID {key_id} successfully updated after refreshing session.")
+                            else:
+                                error_text = await retry_response.text()
+                                raise ValueError(
+                                    f"Failed to update key with ID {key_id} after retry: {retry_response.status}, {error_text}")
+                    else:
+                        error_text = await update_response.text()
+                        raise ValueError(
+                            f"Failed to update key with ID {key_id}: {update_response.status}, {error_text}")
+
+            except aiohttp.ClientError as e:
+                raise ValueError(f"HTTP Client Error while processing key with ID {key_id}: {e}")
+            except ValueError as e:
+                # Логируем ошибку и возвращаем информативное сообщение
+                print(f"Error: {e}")
+                raise
+            except Exception as e:
+                print(f"Unexpected error while updating key with ID {key_id}: {e}")
+                raise ValueError(f"Unexpected error while updating key with ID {key_id}: {e}")
 
 
 class VlessKeyManager(BaseKeyManager):
     def __init__(self, server_ip, session_cookie):
         super().__init__(server_ip, session_cookie)
-        self.get_cert_api_url = f"https://{server_ip}:54321/{MY_SECRET_URL}/server/getNewX25519Cert"
+        self.get_cert_api_url = f"https://{server_ip}:{PORT_X_UI}/{MY_SECRET_URL}/server/getNewX25519Cert"
 
     async def get_certificate(self, session):
         async with session.post(self.get_cert_api_url, headers=self.headers, ssl=False) as response:
@@ -192,7 +222,8 @@ class VlessKeyManager(BaseKeyManager):
                     "minClient": "",
                     "maxClient": "",
                     "maxTimediff": 0,
-                    "shortIds": [short_id, "d794e37acfc7557b", "4815a2", "af5b73d52b", "9f57", "d0", "faad19837e6869", "ea39de6417ae"],
+                    "shortIds": [short_id, "d794e37acfc7557b", "4815a2", "af5b73d52b", "9f57", "d0", "faad19837e6869",
+                                 "ea39de6417ae"],
                     "settings": {
                         "publicKey": public_key,
                         "fingerprint": "firefox",
@@ -272,7 +303,6 @@ class VlessKeyManager(BaseKeyManager):
                 f"?type=tcp&security=reality&pbk={public_key}"
                 f"&fp=firefox&sni={server_name}&sid={short_id}&spx=%2F&flow=xtls-rprx-vision"
                 f"#MASKNETVPN")
-
 
 
 class ShadowsocksKeyManager(BaseKeyManager):

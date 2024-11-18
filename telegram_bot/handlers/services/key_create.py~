@@ -95,9 +95,10 @@ class BaseKeyManager:
             key_id (str): Идентификатор ключа для обновления.
             status (bool): Новый статус для ключа (включен/выключен).
         """
+        get_api_url = f"{self.base_url}/inbound/get/{key_id}"
         update_api_url = f"{self.base_url}/inbound/update/{key_id}"
         update_data = {
-            "id": key_id,
+            "id": int(key_id),
             "enable": True
         }
 
