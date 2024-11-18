@@ -96,7 +96,7 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
             f"Подписка у пользователя:\nID: {sub.user_id}\nUsername: @{user.username}\nИстекла"
         )
         session = await get_session_cookie(sub.server_ip)
-        await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key(sub.key_id, False)
+        await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key_enable(sub.key_id, False)
     except Exception as e:
         await session_methods.session.rollback()
         await logger.log_error(

@@ -176,7 +176,7 @@ class SubscriptionsService:
                             )
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             session = await get_session_cookie(sub.server_ip)
-                            await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key(sub.key_id,
+                            await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key_enable(sub.key_id,
                                                                                                              True)
                             await session_methods.session.commit()
                             await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
