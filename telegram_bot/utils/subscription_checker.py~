@@ -93,6 +93,7 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
         await logger.log_info(
             f"Подписка у пользователя:\nID: {sub.user_id}\nUsername: @{user.username}\nИстекла"
         )
+
     except Exception as e:
         await session_methods.session.rollback()
         await logger.log_error(
@@ -108,8 +109,9 @@ async def handle_subscription_deletion(sub, session_methods):
             return
 
         await session_methods.session.commit()
+        user = await session_methods.users.get_user(sub.user_id)
         await logger.log_info(
-            f"Подписка у пользователя с ID {sub.user_id} полностью удалена.\nКлюч <pre>{sub.key}</pre> удалён."
+            f"Подписка у пользователя:\nID: {sub.user_id}\nUsername: @{user.username}\nПолностью удалена"
         )
     except Exception as e:
         await session_methods.session.rollback()

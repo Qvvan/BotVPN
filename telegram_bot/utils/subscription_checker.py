@@ -6,6 +6,8 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.context_manager import DatabaseContextManager
+from handlers.services.get_session_cookies import get_session_cookie
+from handlers.services.key_create import BaseKeyManager
 from keyboards.kb_inline import SubscriptionCallbackFactory
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
@@ -93,6 +95,8 @@ async def handle_expired_subscription(bot: Bot, sub, session_methods):
         await logger.log_info(
             f"Подписка у пользователя:\nID: {sub.user_id}\nUsername: @{user.username}\nИстекла"
         )
+        session = await get_session_cookie(sub.server_ip)
+        await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key(sub.key_id, False)
     except Exception as e:
         await session_methods.session.rollback()
         await logger.log_error(
@@ -112,6 +116,8 @@ async def handle_subscription_deletion(sub, session_methods):
         await logger.log_info(
             f"Подписка у пользователя:\nID: {sub.user_id}\nUsername: @{user.username}\nПолностью удалена"
         )
+        session = await get_session_cookie(sub.server_ip)
+        await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).delete_key(sub.key_id)
     except Exception as e:
         await session_methods.session.rollback()
         await logger.log_error(
