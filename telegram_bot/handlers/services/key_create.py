@@ -105,6 +105,11 @@ class BaseKeyManager:
             async with session.post(update_api_url, headers=self.headers, json=update_data, ssl=False) as response:
                 if response.status == 200:
                     print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
+                    response_text = await response.text()
+                    print(f"Response Status: {response.status}")
+                    print(f"Response Headers: {response.headers}")
+                    print(f"Response Body: {response_text}")
+                    print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
                 elif response.status == 401:
                     # Получаем новый session_cookie
                     session_cookie = await get_session_cookie(self.server_ip)
