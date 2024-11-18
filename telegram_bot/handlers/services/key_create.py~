@@ -98,7 +98,7 @@ class BaseKeyManager:
         update_api_url = f"{self.base_url}/inbound/update/{key_id}"
         update_data = {
             "id": key_id,
-            "enable": "false" if not status else "true"
+            "enable": status
         }
 
         async with aiohttp.ClientSession() as session:
