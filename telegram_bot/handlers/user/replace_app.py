@@ -9,7 +9,7 @@ from keyboards.kb_inline import InlineKeyboards, SubscriptionCallbackFactory
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from models.models import NameApp
+from models.models import NameApp, SubscriptionStatusEnum
 
 router = Router()
 
@@ -19,6 +19,17 @@ async def get_support(callback_query: CallbackQuery, state: FSMContext, callback
     await callback_query.answer()
     subscription_id = callback_data.subscription_id
     name_app = callback_data.name_app
+    async with DatabaseContextManager() as session_methods:
+        try:
+            subscription = await session_methods.subscription.get_subscription_by_id(subscription_id)
+            if subscription.status == SubscriptionStatusEnum.EXPIRED:
+                await callback_query.answer(LEXICON_RU["subscription_expired"], show_alert=True, cache_time=5)
+                return
+        except Exception as e:
+            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nОшибка при получении подписок', e)
+            await callback_query.answer(LEXICON_RU["error"], show_alert=True, cache_time=5)
+            return
+
 
     await state.update_data(subscription_id=subscription_id)
 
@@ -36,6 +47,16 @@ async def handle_server_selection(callback_query: CallbackQuery,
 
     state_data = await state.get_data()
     subscription_id = int(state_data.get("subscription_id"))
+    async with DatabaseContextManager() as session_methods:
+        try:
+            subscription = await session_methods.subscription.get_subscription_by_id(subscription_id)
+            if subscription.status == SubscriptionStatusEnum.EXPIRED:
+                await callback_query.answer(LEXICON_RU["subscription_expired"], show_alert=True, cache_time=5)
+                return
+        except Exception as e:
+            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nОшибка при получении подписок', e)
+            await callback_query.answer(LEXICON_RU["error"], show_alert=True, cache_time=5)
+            return
 
     user_id = callback_query.from_user.id
     username = callback_query.from_user.username

@@ -8,7 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database.context_manager import DatabaseContextManager
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
-from models.models import NameApp, SubscriptionStatusEnum
+from models.models import NameApp
 
 
 class ServerCallbackData(CallbackData, prefix="server_disable"):
@@ -183,23 +183,22 @@ class InlineKeyboards:
             try:
                 keyboard = InlineKeyboardBuilder()
                 subscription = await session_methods.subscription.get_subscription_by_id(subscription_id)
-                if subscription.status == SubscriptionStatusEnum.ACTIVE:
-                    keyboard.add(
-                        InlineKeyboardButton(
-                            text='🆕 Сменить локацию',
-                            callback_data=ReplaceServerCallbackFactory(
-                                action='rep_serv',
-                                subscription_id=subscription_id,
-                                server_ip=server_ip
-                            ).pack()),
-                        InlineKeyboardButton(
-                            text='🔄 Сменить приложение',
-                            callback_data=SubscriptionCallbackFactory(
-                                action='replace_app',
-                                subscription_id=subscription_id,
-                                name_app=name_app
-                            ).pack())
-                    )
+                keyboard.add(
+                    InlineKeyboardButton(
+                        text='🆕 Сменить локацию',
+                        callback_data=ReplaceServerCallbackFactory(
+                            action='rep_serv',
+                            subscription_id=subscription_id,
+                            server_ip=server_ip
+                        ).pack()),
+                    InlineKeyboardButton(
+                        text='🔄 Сменить приложение',
+                        callback_data=SubscriptionCallbackFactory(
+                            action='replace_app',
+                            subscription_id=subscription_id,
+                            name_app=name_app
+                        ).pack())
+                )
                 keyboard.add(
                     InlineKeyboardButton(
                         text='⏳ Продлить подписку',

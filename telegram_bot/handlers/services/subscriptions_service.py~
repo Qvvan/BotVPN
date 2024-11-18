@@ -141,7 +141,7 @@ class SubscriptionsService:
         async with DatabaseContextManager() as session_methods:
             try:
                 in_payload = message.successful_payment.invoice_payload.split(':')
-                durations_days = int(in_payload[1])
+                durations_days = in_payload[1]
                 user_data = await state.get_data()
                 subscription_id = user_data.get('subscription_id')
 
