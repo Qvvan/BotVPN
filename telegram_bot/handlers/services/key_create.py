@@ -97,8 +97,8 @@ class BaseKeyManager:
         """
         update_api_url = f"{self.base_url}/inbound/update/{key_id}"
         update_data = {
-            "id": key_id,
-            "enable": "false" if not status else "true"
+            "id": int(key_id),
+            "enable": True
         }
 
         async with aiohttp.ClientSession() as session:
@@ -110,6 +110,7 @@ class BaseKeyManager:
                     print(f"Response Headers: {response.headers}")
                     print(f"Response Body: {response_text}")
                     print(f"Key with ID {key_id} successfully updated to {'enabled' if status else 'disabled'}.")
+
                 elif response.status == 401:
                     # Получаем новый session_cookie
                     session_cookie = await get_session_cookie(self.server_ip)
