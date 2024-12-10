@@ -50,6 +50,7 @@ async def get_user_subs(message: Message, state: FSMContext):
 
         except Exception as e:
             await logger.log_error(f'Пользователь: @{message.from_user.username}\n'
+                                   f'ID: {message.from_user.id}\n'
                                    f'Ошибка при получении подписок', e)
 
 

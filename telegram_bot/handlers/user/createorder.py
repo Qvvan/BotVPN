@@ -52,6 +52,7 @@ async def handle_service_callback(callback_query: CallbackQuery, callback_data: 
             )
         except Exception as e:
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
+                                   f'ID: {callback_query.from_user.id}\n'
                                    f'При формирование кнопки оплаты произошла ошибка', e)
             await callback_query.message.edit_text(text="Что-то пошло не так, обратитесь в техподдержку")
 

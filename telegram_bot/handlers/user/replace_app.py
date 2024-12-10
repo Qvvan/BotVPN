@@ -26,7 +26,9 @@ async def get_support(callback_query: CallbackQuery, state: FSMContext, callback
                 await callback_query.answer(LEXICON_RU["subscription_expired"], show_alert=True, cache_time=5)
                 return
         except Exception as e:
-            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nОшибка при получении подписок', e)
+            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
+                                   f'ID: {callback_query.from_user.id}\n'
+                                   f'Ошибка при получении подписок', e)
             await callback_query.answer(LEXICON_RU["error"], show_alert=True, cache_time=5)
             return
 
@@ -54,7 +56,9 @@ async def handle_server_selection(callback_query: CallbackQuery,
                 await callback_query.answer(LEXICON_RU["subscription_expired"], show_alert=True, cache_time=5)
                 return
         except Exception as e:
-            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nОшибка при получении подписок', e)
+            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
+                                   f'ID: {callback_query.from_user.id}\n'
+                                   f'Ошибка при получении подписок', e)
             await callback_query.answer(LEXICON_RU["error"], show_alert=True, cache_time=5)
             return
 
@@ -118,11 +122,14 @@ async def handle_server_selection(callback_query: CallbackQuery,
             await session_methods.session.commit()
 
         except ServerUnavailableError as e:
-            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\nСервер недоступен', e)
+            await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
+                                   f'ID: {callback_query.from_user.id}\n'
+                                   f'Сервер недоступен', e)
             await callback_query.answer("Выберите другой сервер, этот пока что недоступен.", show_alert=True)
             await callback_query.message.delete()
         except Exception as e:
             await logger.log_error(f'Пользователь: @{callback_query.from_user.username}\n'
+                                   f'ID: {callback_query.from_user.id}\n'
                                    f'Ошибка при смене приложения', e)
             await callback_query.message.edit_text(text=LEXICON_RU['error'])
         await state.clear()

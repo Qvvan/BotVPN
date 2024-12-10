@@ -21,9 +21,9 @@ async def get_session_cookie(server_ip: str) -> str:
 
     try:
         async with aiohttp.ClientSession() as session:
-            for attempt in range(3):
+            for attempt in range(5):
                 try:
-                    async with session.post(url, json=payload, ssl=ssl_context, timeout=3) as response:
+                    async with session.post(url, json=payload, ssl=ssl_context, timeout=7) as response:
 
                         if response.status == 200:
                             set_cookie_headers = response.headers.getall("Set-Cookie")
@@ -41,11 +41,11 @@ async def get_session_cookie(server_ip: str) -> str:
 
                         else:
                             await logger.log_error(f"Неудачный ответ от {server_ip}: статус {response.status}", None)
-                    break  # выход из цикла, если подключение успешно
+                    break
 
                 except Exception as e:
                     if attempt == 2:
-                        await logger.log_error(f"Ошибка соединения с {server_ip} после трех попыток", e)
+                        await logger.log_error(f"Ошибка соединения с {server_ip} после пяти попыток", e)
                     else:
                         await asyncio.sleep(1)
 

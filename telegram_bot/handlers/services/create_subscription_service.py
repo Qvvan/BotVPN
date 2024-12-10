@@ -42,5 +42,6 @@ class SubscriptionService:
             return False
         except Exception as e:
             await logger.log_error(f"Пользователь: @{message.from_user.username}"
+                                   f"ID: {message.from_user.id}"
                                    f"Ошибка при создании подписки", e)
             return False

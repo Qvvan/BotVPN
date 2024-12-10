@@ -103,6 +103,7 @@ class SubscriptionsService:
                 await session_methods.session.commit()
                 await SubscriptionsService.send_success_response(message, key)
                 await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                                      f"ID: {message.from_user.id}\n"
                                       f"Оформил подписку на {duration_date} дней")
 
             except Exception as e:
@@ -111,6 +112,7 @@ class SubscriptionsService:
                     await message.answer(text=error_message)
                 else:
                     await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                                           f"ID: {message.from_user.id}\n"
                                            f"Error during transaction processing", e)
                     await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
 
@@ -180,12 +182,14 @@ class SubscriptionsService:
                                                                                                              True)
                             await session_methods.session.commit()
                             await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
+                                                  f"ID: {message.from_user.id}\n"
                                                   f"Продлил подписку на {durations_days} дней")
                 else:
                     await message.answer(text="Подписка не найдена. Проверьте данные.")
 
             except Exception as e:
                 await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
+                                       f"ID {message.from_user.id}\n"
                                        f"Error during transaction processing", e)
                 await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
 

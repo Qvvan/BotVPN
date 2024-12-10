@@ -32,6 +32,7 @@ async def process_start_command(message: Message):
             await session_methods.session.commit()
         except Exception as e:
             await logger.log_error(f'Пользователь: @{message.from_user.username}\n'
+                                   f'ID: {message.from_user.id}\n'
                                    f'При команде /start произошла ошибка:', e)
 
 
