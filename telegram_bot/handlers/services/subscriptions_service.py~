@@ -9,6 +9,7 @@ from handlers.services.create_subscription_service import SubscriptionService
 from handlers.services.create_transaction_service import TransactionService
 from handlers.services.get_session_cookies import get_session_cookie
 from handlers.services.key_create import ShadowsocksKeyManager, BaseKeyManager
+from keyboards.kb_inline import InlineKeyboards
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
@@ -16,6 +17,10 @@ from models.models import SubscriptionStatusEnum, StatusSubscriptionHistory
 
 
 class NoAvailableServersError(Exception):
+    pass
+
+
+class NoActiveSubscriptionError(Exception):
     pass
 
 
@@ -178,17 +183,24 @@ class SubscriptionsService:
                             )
                             await message.answer(text=LEXICON_RU['subscription_renewed'])
                             session = await get_session_cookie(sub.server_ip)
-                            await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key_enable(sub.key_id,
-                                                                                                             True)
+                            await BaseKeyManager(server_ip=sub.server_ip, session_cookie=session).update_key_enable(
+                                sub.key_id,
+                                True)
                             await session_methods.session.commit()
                             await logger.log_info(f"Пользователь: @{message.from_user.username}\n"
                                                   f"ID: {message.from_user.id}\n"
                                                   f"Продлил подписку на {durations_days} дней")
                             return
 
-                raise Exception("Подписка не найдена")
+                raise NoActiveSubscriptionError("нет активных подписок")
 
             except Exception as e:
+                if isinstance(e, NoAvailableServersError):
+                    # Сообщение уже отправлено пользователю, обработка завершена
+                    await message.answer(
+                        text="У вас нет активных подписок, которые можно продлить.",
+                        reply_markup=await InlineKeyboards.support_and_subscribe_keyboard(),
+                    )
                 await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
                                        f"ID {message.from_user.id}\n"
                                        f"Error during transaction processing", e)

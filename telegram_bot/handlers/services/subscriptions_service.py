@@ -9,6 +9,7 @@ from handlers.services.create_subscription_service import SubscriptionService
 from handlers.services.create_transaction_service import TransactionService
 from handlers.services.get_session_cookies import get_session_cookie
 from handlers.services.key_create import ShadowsocksKeyManager, BaseKeyManager
+from keyboards.kb_inline import InlineKeyboards
 from keyboards.kb_reply.kb_inline import ReplyKeyboards
 from lexicon.lexicon_ru import LEXICON_RU
 from logger.logging_config import logger
@@ -16,6 +17,10 @@ from models.models import SubscriptionStatusEnum, StatusSubscriptionHistory
 
 
 class NoAvailableServersError(Exception):
+    pass
+
+
+class NoActiveSubscriptionError(Exception):
     pass
 
 
@@ -187,13 +192,19 @@ class SubscriptionsService:
                                                   f"Продлил подписку на {durations_days} дней")
                             return
 
-                raise Exception("Подписка не найдена")
+                raise NoActiveSubscriptionError("нет активных подписок")
 
             except Exception as e:
+                if isinstance(e, NoActiveSubscriptionError):
+                    await message.answer(
+                        text="У вас нет активных подписок, которые можно продлить.",
+                        reply_markup=await InlineKeyboards.support_and_subscribe_keyboard(),
+                    )
+                else:
+                    await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
                 await logger.log_error(f"Пользователь: @{message.from_user.username}\n"
                                        f"ID {message.from_user.id}\n"
                                        f"Error during transaction processing", e)
-                await message.answer(text="К сожалению, покупка отменена.\nОбратитесь в техподдержку.")
 
                 await SubscriptionsService.refund_payment(message)
 
