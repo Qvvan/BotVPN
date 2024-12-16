@@ -15,7 +15,7 @@ from models.models import NameApp, SubscriptionStatusEnum
 router = Router()
 
 
-@router.callback_query(ReplaceServerCallbackFactory.filter(F.action == '    rep_serv'))
+@router.callback_query(ReplaceServerCallbackFactory.filter(F.action == 'rep_serv'))
 async def get_support(callback_query: CallbackQuery, state: FSMContext, callback_data: SubscriptionCallbackFactory):
     await callback_query.answer()
     subscription_id = callback_data.subscription_id
